@@ -1,0 +1,51 @@
+.tshop-psm-shop-ww-hover {
+    position: fixed;
+    /* _position: fixed; */
+    bottom: 200px;
+    z-index: 10003;
+    background-color: white;
+    /* height: 300px; */
+    right: 20px;
+    width: 53px;
+}
+.tshop-psm-shop-ww-hover .skin-box-content {
+    width: 70px;
+    background-color: transparent;
+    /* font-size: 0; */
+}
+.tshop-psm-shop-ww-hover .toTop {
+    position: relative;
+    text-align: center;
+    z-index: 400;
+    /* text-indent: 2em; */
+    text-align: center;
+    cursor: pointer;
+}
+.bt-color {
+    font-family: SimSun,"Arial Narrow";
+    background-color: #99cc33;
+    line-height: 30px;
+}
+.tshop-psm-shop-ww-hover .hy {
+    position: relative;
+    z-index: 400;
+    border: 1px solid #B2B8BD;
+    text-align: center;
+    line-height: 24px;
+}
+.tshop-psm-shop-ww-hover .WW {
+    position: relative;
+    text-align: center;
+    z-index: 400;
+    border: 1px solid #B2B8BD;
+    border-top-width: 0px;
+    line-height: 24px;
+}
+.tshop-psm-shop-ww-hover a {
+    cursor: pointer;
+}
+.shortbox-font {
+    font-family: SimSun,"Arial Narrow";
+    font-size: 12px;
+    color: #666;
+}

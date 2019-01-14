@@ -1,0 +1,80 @@
+<template>
+  <div>
+    <div class="areaName">
+        <h3>行政区划</h3>
+        <template>
+            <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange" border size="mini">全选</el-checkbox>
+            <el-checkbox-group v-model="checkedArea" @change="handleCheckedAreaChange">
+                <el-checkbox v-for="a in area" :label="a" :key="a" border size="mini">{{a}}</el-checkbox>
+            </el-checkbox-group>
+        </template>
+    </div>
+    <div class="areaName">
+        <h3>改造方式</h3>
+        <template>
+            <el-checkbox :indeterminate="isReform" v-model="reformCheckAll" @change="handleReformCheckAllChange" border size="mini">全选</el-checkbox>
+                <el-checkbox-group v-model="checkedReform" @change="handleCheckedReformChange">
+                <el-checkbox v-for="reform in reforms" :label="reform" :key="reform" border size="mini">{{reform}}</el-checkbox>
+            </el-checkbox-group>
+        </template>
+    </div>
+  </div>
+</template>
+
+<script>
+
+  const areaOptions = ['布吉', '横岗', '南湾', '坂田', '平湖', '龙城', '龙岗', '坪地'];
+  const reformOptions = ['综合整治', '现状保留', '拆除重建', '空地新建', '逐步清退'];
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          checkAll: false,
+          reformCheckAll: false,
+          checkedArea: [],
+          checkedReform: [],
+          area: areaOptions,
+          reforms: reformOptions,
+          isIndeterminate: true,
+          isReform: true
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {
+        handleCheckAllChange(val) {
+            this.checkedArea = val ? areaOptions : [];
+            this.isIndeterminate = false;
+        },
+        handleCheckedAreaChange(value) {
+            let checkedCount = value.length;
+            this.checkAll = checkedCount === this.area.length;
+            this.isIndeterminate = checkedCount > 0 && checkedCount < this.area.length;
+        },
+        handleReformCheckAllChange(val) {
+            this.checkedReform = val ? reformOptions : [];
+            this.isReform = false;
+        },
+        handleCheckedReformChange(value) {
+            let checkedReformCount = value.length;
+            this.reformCheckAll = checkedReformCount === this.reforms.length;
+            this.isReform = checkedReformCount > 0 && checkedReformCount < this.reforms.length;
+        }
+    },
+
+    watch: {}
+
+  }
+
+</script>
+<style lang='' scoped>
+    
+</style>

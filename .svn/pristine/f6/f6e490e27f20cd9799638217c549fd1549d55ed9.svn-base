@@ -1,0 +1,151 @@
+<template>
+  <!-- 产业用地地块信息 -->
+  <div class="areamsg">
+    <div class="areaTitle">
+        <div class="title1">
+            <span>{{landareaDetail.names}}</span>
+        </div>
+        <div class="title2">
+            <span class="title2Tip">[{{landareaDetail.landproperty}}]</span><span class="title2Bg">{{landareaDetail.landstatus}}</span>
+        </div>
+    </div>
+    <div class="areaImgTable">
+        <div class="areaImg">
+            <el-carousel trigger="click" height="190">
+                <el-carousel-item v-for="(p,index) in areaMsgPic" :key="index">
+                    <img src="http://172.17.6.123:8080/upload/plan/201606/15416622953372.png" alt="">
+                    <!-- <img :src="`${baseUrl}${p.TsupPhoto.url}`" alt=""> -->
+                </el-carousel-item>
+            </el-carousel>
+        </div>
+        <div class="areaTable1">
+            <ul>
+                <li>
+                    <div>
+                        <p>所属街道：</p>
+                    </div>
+                    <div>
+                        <p>{{landareaDetail.jdname}}</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <p>地址：</p>
+                    </div>
+                    <div>
+                        <p>{{landareaDetail.address}}</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <p>土地权属：</p>
+                    </div>
+                    <div>
+                        <p>{{landareaDetail.ownership}}</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <p>地块面积(m²)：</p>
+                    </div>
+                    <div>
+                        <p>{{landareaDetail.area}}</p>
+                    </div>
+                </li>
+                <li class="buildingsPrice">
+                    <div>
+                        <p>参考楼面地价(元/平方米)：</p>
+                    </div>
+                    <div>
+                        <p>{{landareaDetail.referenceprice}}</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <p>联系方式：</p>
+                    </div>
+                    <div>
+                        <p>{{landareaDetail.unit}}&nbsp;&nbsp;&nbsp;&nbsp;{{landareaDetail.contact}}&nbsp;&nbsp;&nbsp;&nbsp;{{landareaDetail.tel}}</p>
+                        <p>{{landareaDetail.unit2}}&nbsp;&nbsp;&nbsp;&nbsp;{{landareaDetail.contact2}}&nbsp;&nbsp;&nbsp;&nbsp;{{landareaDetail.tel2}}</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="areaTable2">
+        <ul>
+            <li>
+                <div>
+                    <p>产业定位：</p>
+                </div>
+                <div>
+                    <p>{{landareaDetail.orientation}}</p>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <p>准入条件：</p>
+                </div>
+                <div>
+                    <p>1、符合深圳市产业导向目录和龙岗区产业导向目录；</p>
+                    <p>2、注册地和纳税必须在龙岗；</p>
+                    <p>3、{{landareaDetail.accessconditions}}</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+  import { base_url } from '@/api/api.js'
+  import { publicRequirest } from '@/api/api.js'
+  export default {
+    name:'',
+    props:['landareaDetail'],
+    data () {
+      return {
+          bid: '',
+          baseUrl: '',
+          areaMsgPic: ''
+      };
+    },
+
+    components: {},
+
+    computed: {
+        
+    },
+
+    created() {
+        this.baseUrl = base_url;
+    },
+
+    mounted() {
+        this.bid = this.$route.query.bid;
+        this.getAreaMsgPic(this.bid);
+    },
+
+    methods: {
+        getAreaMsgPic: function(bid) {
+            publicRequirest.getKeyAreaDetailImage(3,bid).then(res => {
+                this.areaMsgPic = res.data.list;
+            })
+        }
+    },
+
+    watch: {
+        '$route' (to, from) {
+            if(from.path === "/"){
+                this.bid = this.$route.query.bid;
+                this.getAreaMsgPic(this.areaMsgPic);
+            }
+        }
+    }
+
+  }
+
+</script>
+<style lang=''>
+    @import url('../../styles/areamsg.css');
+</style>

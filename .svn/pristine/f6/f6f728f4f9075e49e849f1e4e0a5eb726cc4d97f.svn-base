@@ -1,0 +1,160 @@
+<template>
+  <div class="areamsg">
+    <div class="areaTitle">
+        <span>中美低碳建筑与社区创新实验中心</span>
+    </div>
+    <div class="areaImgTable">
+        <div class="areaImg">
+            <el-carousel trigger="click" height="190">
+                <el-carousel-item v-for="item in 4" :key="item">
+                    <h3>{{ item }}</h3>
+                </el-carousel-item>
+            </el-carousel>
+        </div>
+        <div class="areaTable1">
+            <ul>
+                <li v-for="item1 in itemdata1" :key="item1.id">
+                    <div>
+                        <p>{{item1.name}}</p>
+                    </div>
+                    <div>
+                        <p v-for="i in item1.msg" :key="i">{{i}}</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="areaTable2">
+        <ul>
+            <li v-for="item2 in itemdata2" :key="item2.id">
+                <div>
+                    <p>{{item2.name}}</p>
+                </div>
+                <div>
+                    <p v-for="p in item2.msg" :key="p">{{p}}</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          areadata: [{
+              id: '1',
+              name: '所属街道：',
+              msg: ['龙岗']
+          },{
+              id: '2',
+              name: '地址：',
+              msg: ['宝龙高新园区清风大道与宝龙一路交汇处']
+          },{
+              id: '3',
+              name: '土地权属：',
+              msg: ['国有']
+          },{
+              id: '4',
+              name: '地块面积(㎡)：',
+              msg: ['11646.4']
+          },{
+              id: '5',
+              name: '参考楼面地价(元/平方米)：',
+              msg: ['1000']
+          },{
+              id: '6',
+              name: '联系方式：',
+              msg: ['宝龙片区管理办公室 丘先生	0755-89933028','龙岗区投资推广中心 钟先生	0755-28949299']
+          },{
+              id: '7',
+              name: '产业定位：',
+              msg: ['高新技术产业、战略性新兴产业基地']
+          },{
+              id: '8',
+              name: '准入条件：',
+              msg: ['1、符合深圳市产业导向目录和龙岗区产业导向目录；','2、注册地和纳税必须在龙岗；','3、准入产业：高新技术产业、战略性新兴产业。']
+          }],
+          itemdata2: []
+      };
+    },
+
+    components: {},
+
+    computed: {
+        itemdata1() {
+            const len = this.areadata.length-2;
+            this.itemdata2 = this.areadata.splice(len,2);
+            return this.areadata;
+        }
+    },
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .areamsg{
+        width: 610px;
+        /* height: 500px; */
+        height: 406px;
+        padding: 5px;
+        border: 1px solid #A3A5A7;
+    }
+    .areaTitle{
+        width: 100%;
+        padding: 6px 0;
+        text-align: center;
+    }
+    .areaTitle span{
+        font-size: 16px;
+    }
+    .areaImgTable{
+        width: 100%;
+        margin-top: 10px;
+        display: flex;
+    }
+    .areaImg{
+        width: 250px;
+        height: 190px;
+        margin-top: 10px;
+    }
+    .areamsg .el-carousel__container {
+        height: 190px;
+    }
+    .areamsg .el-carousel__button{
+        width: 20px;
+    }
+    .areaTable1{
+        width: 338px;
+        /* height: 300px; */
+        /* background: red; */
+        margin-left: 15px;
+    }
+    .areaTable2{
+        width: 100%;
+    }
+    .areaTable1 ul,.areaTable2 ul{
+        width: 100%;
+    }
+    .areaTable1 ul li,.areaTable2 ul li{
+        padding: 10px 2px;
+        border-bottom: 1px dashed #A3A5A7;
+        display: flex;
+    }
+    .areaTable1 ul li div p,.areaTable2 ul li div p{
+        color: #000;
+        line-height: 18px;
+    }
+</style>

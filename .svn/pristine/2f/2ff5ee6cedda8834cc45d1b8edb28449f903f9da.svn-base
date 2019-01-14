@@ -1,0 +1,336 @@
+<template>
+  <div class="switchList">
+      <el-scrollbar style="height: 100%">
+        <div class="listContainer">
+            <div class="listHeader">
+            <table border="0">
+                <tr>
+                    <td>区&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;域：</td>
+                    <td>
+                        <el-radio-group v-model="area" @change="checkedElRadio1">
+                            <el-radio-button label="全部"></el-radio-button>
+                            <el-radio-button label="布吉"></el-radio-button>
+                            <el-radio-button label="横岗"></el-radio-button>
+                            <el-radio-button label="南湾"></el-radio-button>
+                            <el-radio-button label="坂田"></el-radio-button>
+                            <el-radio-button label="平湖"></el-radio-button>
+                            <el-radio-button label="龙城"></el-radio-button>
+                            <el-radio-button label="龙岗"></el-radio-button>
+                            <el-radio-button label="坪地"></el-radio-button>
+                        </el-radio-group>
+                    </td>
+                </tr>
+                <tr>
+                    <td>租金单价：</td>
+                    <td>
+                        <el-radio-group v-model="rental" @change="checkedElRadio2">
+                            <el-radio-button label="全部"></el-radio-button>
+                            <el-radio-button label="0-15"></el-radio-button>
+                            <el-radio-button label="15-30"></el-radio-button>
+                            <el-radio-button label="30-50"></el-radio-button>
+                            <el-radio-button label="50-100"></el-radio-button>
+                            <el-radio-button label="100以上"></el-radio-button>
+                        </el-radio-group>
+                        <span class="unit">单位：元/m²</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>面&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;积：</td>
+                    <td>
+                        <el-radio-group v-model="square" @change="checkedElRadio3">
+                            <el-radio-button label="全部"></el-radio-button>
+                            <el-radio-button label="0-1000"></el-radio-button>
+                            <el-radio-button label="1000-2000"></el-radio-button>
+                            <el-radio-button label="2000-3000"></el-radio-button>
+                            <el-radio-button label="3000-5000"></el-radio-button>
+                            <el-radio-button label="5000以上"></el-radio-button>
+                        </el-radio-group>
+                        <span class="unit">单位：m²</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>其&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;他：</td>
+                    <td>
+                        <el-radio-group v-model="other" @change="checkedElRadio4">
+                            <el-radio-button label="全部"></el-radio-button>
+                            <el-radio-button label="创兴产业园"></el-radio-button>
+                            <el-radio-button label="重点片区"></el-radio-button>
+                        </el-radio-group>
+                    </td>
+                </tr>
+                <tr>
+                    <td>筛选条件：</td>
+                    <td>
+                        <el-tag
+                            v-for="s1 in screen1"
+                            :key="s1"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s1)">
+                            {{s1}}
+                        </el-tag>
+                        <el-tag
+                            v-for="s2 in screen2"
+                            :key="s2"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s2)">
+                            {{s2}}
+                        </el-tag>
+                        <el-tag
+                            v-for="s3 in screen3"
+                            :key="s3"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s3)">
+                            {{s3}}
+                        </el-tag>
+                        <el-tag
+                            v-for="s4 in screen4"
+                            :key="s4"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s4)">
+                            {{s4}}
+                        </el-tag>
+                    </td>
+                </tr>
+            </table>
+            </div>
+            <div class="listContent">
+                <div class="listLeft">
+                    <div class="sortAndPagenation">
+                        <el-radio-group v-model="sort">
+                            <el-radio-button label="默认排序">
+                                
+                            </el-radio-button>
+                            <el-radio-button label="价格">
+                                <i class="el-icon-arrow-down">价格</i>
+                            </el-radio-button>
+                            <el-radio-button label="面积">
+                                <i class="el-icon-arrow-down">面积</i>
+                            </el-radio-button>
+                        </el-radio-group>
+                        <el-pagination
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            :current-page="currentPage"
+                            layout="total, prev, pager, next, jumper"
+                            :total="40">
+                        </el-pagination>
+                    </div>
+                    <div class="sortContent">
+
+                    </div>
+                </div>
+                <div class="listRight">
+                    <v-detaillist></v-detaillist>
+                    <v-detaillist></v-detaillist>
+                </div>
+            </div>
+        </div>
+      </el-scrollbar>
+  </div>
+</template>
+
+<script>
+  import vDetaillist from "@/components/detailblock/detaillist"
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          area: '全部',
+          rental: '全部',
+          square: '全部',
+          other: '全部',
+          sort: '默认排序',
+          screen1: [],
+          screen2: [],
+          screen3: [],
+          screen4: [],
+          currentPage: 1
+      };
+    },
+
+    components: {
+        vDetaillist
+    },
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {
+        checkedElRadio1: function() {
+            this.screen1 = [];
+            if(this.area !== "全部"){
+                this.screen1.push(this.area);
+            }
+        },
+        checkedElRadio2: function() {
+            this.screen2 = [];
+            if(this.rental !== "全部"){
+                this.screen2.push(this.rental);
+            }
+        },
+        checkedElRadio3: function() {
+            this.screen3 = [];
+            if(this.square !== "全部"){
+                this.screen3.push(this.square);
+            }
+        },
+        checkedElRadio4: function() {
+            this.screen4 = [];
+            if(this.other !== "全部"){
+                this.screen4.push(this.other);
+            }
+        },
+        handleClose: function(s){
+            if(s === "布吉" || s === "横岗" || s === "南湾" || s === "坂田" || s === "平湖" || s === "龙城" || s === "龙岗" || s === "坪地"){
+                this.screen1.splice(this.screen1.indexOf(s), 1);
+                this.area = "全部";
+            }
+            if(s === "0-15" || s === "15-30" || s === "30-50" || s === "50-100" || s === "100以上"){
+                this.screen2.splice(this.screen2.indexOf(s), 1);
+                this.rental = "全部";
+            }
+            if(s === "0-1000" || s === "1000-2000" || s === "2000-3000" || s === "3000-5000" || s === "5000以上"){
+                this.screen3.splice(this.screen3.indexOf(s), 1);
+                this.square = "全部";
+            }
+            if(s === "创兴产业园" || s === "重点片区"){
+                this.screen4.splice(this.screen4.indexOf(s), 1);
+                this.other = "全部";
+            }
+        },
+        handleSizeChange(val) {
+            console.log(`每页 ${val} 条`);
+        },
+        handleCurrentChange(val) {
+            console.log(`当前页: ${val}`);
+        }
+    },
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .switchList{
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .listContainer {
+        width: 960px;
+        height: 1000px;
+        /* background: red; */
+        padding: 5px;
+        margin: 0 auto;
+    }
+    .listHeader{
+        width: 100%;
+        background: #99cc33;
+    }
+    .listHeader table{
+        width: 100%;
+    }
+    .listHeader table tr td{
+        padding: 4px 5px;
+        font-size: 16px;
+    }
+    .listHeader table tr td:first-child{
+        text-align: right;
+    }
+    .unit{
+        color: #fff;
+    }
+    .listHeader .el-radio-button:first-child .el-radio-button__inner,.listContent .el-radio-button:first-child .el-radio-button__inner {
+        border-left: none;
+    }
+    .listHeader .el-radio-button__inner,.listContent .el-radio-button__inner {
+        background: none;
+        border: none;
+        color: #000;
+    }
+    .listHeader .el-radio-button:first-child .el-radio-button__inner,.listContent .el-radio-button:first-child .el-radio-button__inner {
+        border-radius: 0;
+    }
+    .listHeader .el-radio-button:last-child .el-radio-button__inner,.listContent .el-radio-button:last-child .el-radio-button__inner {
+        border-radius: 0;
+    }
+    .listHeader .el-radio-button__orig-radio:checked+.el-radio-button__inner,.listContent .el-radio-button__orig-radio:checked+.el-radio-button__inner {
+        background: #ff7f00;
+        border-color: none; 
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    .listHeader .el-tag {
+        color: #000;
+        border-color: #000;
+    }
+    .listHeader .el-tag .el-icon-close {
+        color: #000;
+    }
+    .listHeader .el-tag--small .el-icon-close {
+        -webkit-transform: none;
+        transform: none;
+    }
+    .listContent {
+        width: 100%;
+        height: 800px;
+        /* background: red; */
+        margin-top: 10px;
+        display: flex;
+    }
+    .listLeft {
+        width: 648px;
+    }
+    .sortAndPagenation {
+        padding: 4px 0;
+        border-bottom: 1px dashed #000;
+    }
+    .listContent .el-icon-arrow-down:before {
+        content: "";
+    }
+    .listContent .el-icon-arrow-down:after {
+        content: "\E603";
+    }
+    .listContent .el-pagination {
+        width: 370px;
+        display: inline-block;
+        text-align: right;
+    }
+    .listContent .el-pager li {
+        min-width: 26px;
+    }
+
+    .sortContent{
+        width: 100%;
+        height: 800px;
+        background: red;
+    }
+
+    .listRight{
+        width: 300px;
+        margin-left: 10px; 
+    }
+
+
+
+    .el-scrollbar__wrap {
+        overflow-x: hidden;
+    }
+    .is-horizontal {
+        display: none;
+    }
+
+</style>

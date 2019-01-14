@@ -1,0 +1,48 @@
+<template>
+  <div class="switchMapContainer">
+    <div id="switchMap">
+
+    </div>
+  </div>
+</template>
+
+<script>
+  import { loadingMap } from '@/map/map.js'
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {
+       loadingMap(switchMap);
+    },
+
+    methods: {
+
+    },
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .switchMapContainer{
+        width: 100%;
+        height: 100%;
+    }
+    #switchMap{
+        width: 100%;
+        height: 100%;
+    }
+</style>

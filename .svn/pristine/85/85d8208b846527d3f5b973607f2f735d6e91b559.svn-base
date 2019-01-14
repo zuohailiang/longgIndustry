@@ -1,0 +1,186 @@
+<template>
+  <div class="enterpriseMsg">
+    <el-tabs type="border-card">
+        <el-tab-pane label="搜索条件">
+            <div class="searchAndResult">
+                <el-scrollbar style="height: 100%;">
+                    <el-collapse v-model="activeNames">
+                        <el-collapse-item v-for="selectC in selectConditions" :title="selectC.title" :key="selectC.id" :name="selectC.id">
+                            <template>
+                                <el-checkbox-group v-model="selectedConditions" @change="selectConditionChange">
+                                    <el-checkbox v-for="option in selectC.selectName" :label="option" :key="option" border size="mini">{{option}}</el-checkbox>
+                                </el-checkbox-group>
+                            </template>
+                        </el-collapse-item>
+                    </el-collapse>
+                </el-scrollbar>
+            </div>
+        </el-tab-pane>
+        <el-tab-pane label="结果列表">
+            <div class="searchAndResult">
+                <el-scrollbar style="height: 100%;">
+                    <div class="searchCondition">
+                        <h3 style="margin-bottom: 5px;">筛选条件：</h3>
+                        <div class="searchName">
+                            <el-scrollbar style="height: 100%;">
+                                <el-tag
+                                    v-for="tag in dynamicTags"
+                                    :key="tag"
+                                    closable
+                                    :disable-transitions="false"
+                                    size="mini"
+                                    @close="handleClose(tag)">
+                                    {{tag}}
+                                </el-tag>
+                            </el-scrollbar>
+                        </div>
+                        <h3 style="margin-top: 5px;">搜索结果：</h3>
+                        <div class="searchResult">
+                            <el-scrollbar style="height: 100%">
+
+                            </el-scrollbar>
+                        </div>
+                    </div>
+                </el-scrollbar>
+            </div>
+        </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+  import { selectConditions } from '@/data/selectCondition.js'
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+        activeNames: [selectConditions[0].id, selectConditions[2].id],
+        selectedConditions: [],
+        selectConditions: selectConditions,
+        dynamicTags: []
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {
+        selectConditionChange(value) {
+            this.dynamicTags = [];
+            if(value.length !== 0){
+                value.forEach(element => {
+                    this.dynamicTags.push(element);
+                });
+            }
+        },
+        handleClose(tag) {
+            this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+            this.selectedConditions = [];
+            if(this.dynamicTags.length !== 0) {
+                this.dynamicTags.forEach(element => {
+                    this.selectedConditions.push(element);
+                })
+            }
+        }
+    },
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .enterpriseMsg {
+        width: 260px;
+        height: 738px;
+        background-color: white;
+        position: absolute;
+        top: 68px;
+        right: 1px;
+        z-index: 999;
+        border: 1px solid #4491df;
+    }
+    .searchAndResult{
+        width: 100%;
+        height: 675px;
+        overflow: hidden;
+    }
+    .el-tabs__nav{
+        width: 100%;
+    }
+    .el-tabs--border-card>.el-tabs__header .el-tabs__item {
+        width: 50%;
+        text-align: center;
+        margin: 0;
+        color: #000;
+        font-weight: bold;
+    }
+    .el-tabs--border-card>.el-tabs__header .el-tabs__item.is-active {
+        background-color: #99CC33;
+        color: #fff;
+    }
+    .el-tabs--border-card>.el-tabs__content{
+        padding: 10px;
+    }
+    /* .el-scrollbar__bar{
+        right: -10px;
+    } */
+    .el-scrollbar__wrap {
+        overflow-x: hidden;
+    }
+    .is-horizontal {
+        display: none;
+    }
+    .el-checkbox.is-bordered.el-checkbox--mini .el-checkbox__inner{
+        display: none;
+    }
+    .el-checkbox.is-bordered.el-checkbox--mini {
+        margin-left: 10px;
+        padding: 3px 10px 3px 0px;
+    }
+    .el-checkbox.is-bordered+.el-checkbox.is-bordered{
+        margin-bottom: 4px;
+    }
+    .el-collapse-item__content{
+        padding-bottom: 10px;
+    }
+
+    /* 结果列表样式 */
+    .el-tag + .el-tag {
+        margin-left: 10px;
+    }
+    .button-new-tag {
+        margin-left: 10px;
+        height: 32px;
+        line-height: 30px;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    .searchName {
+        width: 100%;
+        height: 100px;
+        overflow: hidden;
+    }
+    .searchResult{
+        width: 100%;
+        height: 500px;
+        /* background: #000; */
+        overflow: hidden;
+    }
+    .el-tag--mini{
+        margin-left: 10px;
+    }
+    .el-tag .el-icon-close{
+        width: 10px;
+        right: 0;
+    }
+    .el-tag{
+        margin-top: 4px;
+    }
+</style>

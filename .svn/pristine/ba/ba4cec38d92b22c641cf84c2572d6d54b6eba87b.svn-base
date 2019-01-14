@@ -1,0 +1,139 @@
+<template>
+  <!-- 周边配套地图 -->
+  <div class="mating_map">
+      <h3>周边配套地图</h3>
+      <div class="mapDisplay">
+          <div id="map_show">
+
+          </div>
+          <div class="ptao_right" :class="isClick ? open1 : hide1">
+              <div class="ptao_Condition"></div>
+              <div class="ptao_rlt"></div>
+              <div class="Supportdiv"></div>
+          </div>
+          <div class="showSpan" :class="isClick ? open2 : hide2" @click="openHideCondition">
+              <i class="el-icon-caret-right" v-if="isClick"></i>
+              <i class="el-icon-caret-left" v-else></i>
+          </div>
+      </div>
+  </div>
+</template>
+
+<script>
+//   import { loadingMap } from '@/map/map.js'
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          isClick: true,
+          hide1: 'hide1',
+          open1: 'open1',
+          hide2: 'hide2',
+          open2: 'open2'
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {
+        // loadingMap(map_show);
+    },
+
+    methods: {
+        openHideCondition() {
+            this.isClick = !this.isClick
+        }
+    },
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .open1{
+        right: 0;
+        transition: .5s;
+    }
+    .hide1{
+        right: -295px;
+        transition: .5s;
+    }
+    .open2{
+        right: 295px;
+        transition: .5s;
+    }
+    .hide2{
+        right: 0;
+        transition: .5s;
+    }
+    .mating_map{
+        width: 100%;
+        height: 100%;
+        border: 1px solid #A3A5A7;
+    }
+    .matingMap h3{
+        width: 100%;
+        padding: 6px 0;
+        font-size: 16px;
+        text-indent: 5px;
+        background: #99cc33;
+    }
+    .mapDisplay{
+        width: 100%;
+        height: calc(100% - 28px);
+        /* background: red; */
+        position: relative;
+        overflow: hidden;
+    }
+    #map_show{
+        width: 100%;
+        height: 100%;
+    }
+    .ptao_right{
+        z-index: 9990;
+        width: 295px;
+        height: 418px;
+        background-color: white;
+        position: absolute;
+        /* right: 0; */
+        top: 2px;
+        -webkit-box-shadow: #666 -1px 1px 3px;
+        -moz-box-shadow: #666 -1px 1px 3px;
+        box-shadow: #666 -1px 1px 3px;
+    }
+    .ptao_Condition{
+        height: 38px;
+        border-bottom: 1px dashed rgb(97, 97, 97);
+    }
+    .ptao_rlt{
+        height: 309px;
+    }
+    .Supportdiv {
+        height: 60px;
+    }
+    .showSpan {
+        z-index: 9991;
+        height: 20px;
+        background: white;
+        border-top: 0.5px solid #666;
+        -webkit-box-shadow: #666 -1px 1px 3px;
+        -moz-box-shadow: #666 -1px 1px 3px;
+        box-shadow: #666 -1px 1px 3px;
+        padding-top: 15px;
+        padding-bottom: 5px;
+        text-align: center;
+        padding-bottom: 5px;
+        position: absolute;
+        /* right: 295px; */
+        top: calc(50% - 10px);
+    }
+    .showSpan i{
+        font-size: 16px;
+    }
+</style>

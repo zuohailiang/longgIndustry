@@ -1,0 +1,80 @@
+<template>
+  <!-- 土地招拍挂信息下的图片缩略框 -->
+  <div class="thumbnail">
+      <h4>法定图则(红线图)</h4>
+      <div class="thumbnailImage">
+          <el-carousel trigger="click" height="215">
+            <el-carousel-item v-for="item in 4" :key="item">
+                <h3>{{ item }}</h3>
+            </el-carousel-item>
+          </el-carousel>
+      </div>
+  </div>
+</template>
+
+<script>
+
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .thumbnail{
+        width: 328px;
+        height: 240px;
+        border: 1px solid #A3A5A7;
+        margin-top: 10px;
+        background-color: white;
+    }
+    .thumbnail h4{
+        width: 100%;
+        height: 25px;
+        text-indent: 5px;
+        color: #000;
+        background-color: #99cc33;
+        line-height: 25px;
+    }
+    .thumbnailImage{
+        width: 100%;
+        height: 215px;
+    }
+    .el-carousel__container {
+        height: 215px;
+    }
+
+    .el-carousel__item h3 {
+        color: #475669;
+        font-size: 14px;
+        opacity: 0.75;
+        line-height: 150px;
+        margin: 0;
+    }
+
+    .el-carousel__item:nth-child(2n) {
+        background-color: #99a9bf;
+    }
+    
+    .el-carousel__item:nth-child(2n+1) {
+        background-color: #d3dce6;
+    }
+</style>

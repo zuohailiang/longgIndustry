@@ -1,0 +1,166 @@
+<template>
+      <el-dialog
+        v-dialogDrag
+        :title="popupTitle"
+        :visible.sync="dialogVisible"
+        :modal="modal"
+        :center="center"
+        :before-close="handleClose"
+        :close-on-click-modal="closeClick"
+        width="697px"
+        >
+        <div class="detailMsg">
+            <template>
+                <el-tabs tab-position="left" style="height: 412px;">
+                    <el-tab-pane v-for="list in msgPopupShowList" :key="list.TsupPlan.bid">
+                        <!-- <span slot="label" :title="list.TsupPlan.title">{{list.TsupPlan.title}}</span> -->
+                        <el-tooltip slot="label" effect="light" :content="list.TsupPlan.title" placement="top-end">
+                            <span>{{list.TsupPlan.title}}</span>
+                        </el-tooltip>
+                        <div class="tabContent">
+                            <el-scrollbar style="height: 100%">
+                                <h3>{{list.TsupPlan.title}}</h3>
+                                <label>内容摘要：</label>
+                                <p>{{list.TsupPlan.content}}</p>
+                                <div class="file-time">
+                                    <label>文件下载：</label>
+                                    <a href="javascript:void(0);" :url="list.TsupPlan.url" @click="downLoadFile" ref="down">{{list.TsupPlan.filename}}</a>
+                                </div>
+                                <div class="file-time">
+                                    <label>上传时间：</label>
+                                    <span>{{list.TsupPlan.uploadtime}}</span>
+                                </div>
+                            </el-scrollbar>
+                        </div>
+                    </el-tab-pane>
+                    <!-- <el-tab-pane label="2 龙岗区现代物流业发展十二五规划">配置管理</el-tab-pane>
+                    <el-tab-pane label="3 龙岗区科学和技术发展十二五规划">角色管理</el-tab-pane> -->
+                </el-tabs>
+            </template>
+        </div>
+      </el-dialog>
+</template>
+
+<script>
+  import '../../directive/dialogdrag.js'  
+  import { publicRequirest } from '@/api/api.js'
+  export default {
+    name:'',
+    props:['title','showContent'],
+    data () {
+      return {
+          dialogVisible: true,
+          modal: false,
+          center:true,
+          closeClick: false,
+          popupTitle: this.title,
+          msgPopupShowList: this.showContent
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {
+       
+    },
+
+    methods: {
+        handleClose(done){
+            this.$emit('update:dialogVisible',false);
+        },
+        downLoadFile() {
+            let filename = this.$refs.down[1].innerHTML;
+            let url = this.$refs.down[1].getAttribute("url");
+            publicRequirest.downloadFile(filename,url).then(function(res){
+                console.log(res);
+                if(res.request.response !== "" && res.request.responseText !== ""){
+                    window.location.href = res.request.responseURL;
+                }
+            }).catch(function(error){
+                console.log(error);
+            })
+        }
+    },
+    watch: {
+        showContent(val) {
+            this.msgPopupShowList = val;
+        }
+    }
+    
+  }
+
+</script>
+<style lang=''>
+    .detailMsg{
+        width: 100%;
+    }
+    .tabContent{
+        width: 100%;
+        height: 412px;
+        /* background: red; */
+        overflow: hidden;
+    }
+    .tabContent .file-time{
+        /* height: 32px;
+        line-height: 32px; */
+        padding: 6px 0;
+    }
+    .tabContent .file-time a{
+        line-height: 1.4;
+    }
+    .detailMsg h3{
+        width: 100%;
+        text-align: center;
+        padding: 6px 0;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .detailMsg label{
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .detailMsg p{
+        text-indent: 32px;
+        line-height: 2;
+        text-align: justify;
+        margin-top: 10px;
+        color: #000 !important;
+    }
+    .el-dialog__header {
+        padding: 10px 10px;
+        background: #60B1F0;
+    }
+    .el-dialog__headerbtn{
+        top: 15px;
+    }
+    .el-dialog__headerbtn .el-dialog__close{
+        color: #000;
+    }
+    .el-dialog--center{
+        margin-top: 12% !important;
+    }
+    .el-dialog--center .el-dialog__body{
+        padding: 15px 5px 15px;
+    }
+    .el-dialog__wrapper{
+        overflow: hidden;
+    }
+    .el-tabs--left .el-tabs__item.is-left{
+        text-align: left;
+        width: 236px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .el-scrollbar__wrap {
+        overflow-x: hidden !important;
+    }
+    .is-horizontal {
+        display: none;
+    }
+</style>

@@ -1,0 +1,65 @@
+#popup-content{
+    width: 100%;
+    height: 100%;
+}
+.popupTitle{
+    width: 100%;
+    height: 24px;
+    line-height: 24px;
+    /* background: red; */
+    display: flex;
+}
+.popupTitle .title1{
+    font-size: 18px;
+}
+.popupTitle .title2{
+    line-height: 16px;
+    margin-left: 4px;
+}
+.title2Bg{
+    /* background: url('../../../../static/images/status.png') no-repeat;
+    background-size: cover;
+    background-attachment:fixed; */
+    /* border: 2px solid #2297C4; */
+    background: #148DDA;
+    padding: 0 5px;
+    color: #fff;
+    margin-left: 4px;
+}
+.title2Tip{
+    color: #729825;
+}
+.popupImg img {
+    width: 94%;
+    height: 200px;
+    margin: 0 auto;
+}
+.popupContent{
+    width: 100%;
+}
+.popupContent table{
+    width: 100%;
+}
+.popupContent table tr td{
+    padding: 5px;
+    text-align: justify;
+    font-size: 14px;
+}
+.popupContent table tr td:first-child{
+    width: 70px;
+}
+.detailButton{
+    text-align: center;
+    margin-top: 5px;
+}
+.detailButton button{
+    padding: 4px 10px;
+    border: none;
+    background: #003366;
+    color: #fff;
+    outline: none;
+    cursor: pointer;
+}
+.phoneNum{
+    color: #FF4773;
+}

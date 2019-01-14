@@ -1,0 +1,321 @@
+<template>
+  <div class="mapSearchSelect">
+     <div class="right">
+         <div class="operate1">
+             <a href="" style="margin-left: 22px;">主页</a>
+         </div>
+         <div class="operate2" v-if="isSwitch">
+             <router-link to="/searchmap/switchlist">切换到列表</router-link>
+         </div>
+         <div class="operate3" v-else>
+             <router-link to="/searchmap/switchmap">切换到地图</router-link>
+         </div>
+     </div>
+     <div class="left" v-if="isArea">
+        <div class="tabConditon">
+            <el-radio-group v-model="radio" @change="radioSelect">
+                <el-radio-button label="可售产业用地"></el-radio-button>
+                <el-radio-button label="可租产业用房"></el-radio-button>
+                <el-radio-button label="可售产业用房"></el-radio-button>
+            </el-radio-group>
+            <el-input placeholder="请输入内容" v-model="input">
+                <el-button slot="append" icon="el-icon-search" @click="checkSaleAndSent"></el-button>
+            </el-input>
+        </div>
+        <div class="selectCondition">
+            <el-select v-model="valueArea" placeholder="区域">
+                <el-option
+                    v-for="item in selectArea"
+                    :key="item.id"
+                    :label="item.label"
+                    :value="item.value">
+                </el-option>
+            </el-select>
+            <el-select v-model="valuePrice" placeholder="单价(元/m²)">
+                <el-option
+                    v-for="item in selectPrice"
+                    :key="item.id"
+                    :label="item.label"
+                    :value="item.value">
+                </el-option>
+            </el-select>
+            <el-select v-model="valueSquare" placeholder="面积(m²)">
+                <el-option
+                    v-for="item in selectSquare"
+                    :key="item.id"
+                    :label="item.label"
+                    :value="item.value">
+                </el-option>
+            </el-select>
+            <el-checkbox-group v-model="checkList" v-if="stateCheck">
+                <el-checkbox v-for="item in checkSelectList" :key="item" :label="item"></el-checkbox>
+            </el-checkbox-group>
+        </div>
+     </div>
+     <div class="left" v-else>
+         <div class="tabConditon">
+            <el-radio-group v-model="radioList" @change="radioListSelect">
+                <el-radio-button label="可售产业用地"></el-radio-button>
+                <el-radio-button label="可租产业用房"></el-radio-button>
+                <el-radio-button label="可售产业用房"></el-radio-button>
+            </el-radio-group>
+        </div>
+        <el-input placeholder="请输入内容" v-model="inputList">
+            <el-button slot="append" icon="el-icon-search"></el-button>
+        </el-input>
+     </div>
+  </div>
+</template>
+
+<script>
+  import { selectArea, selectPrice1, selectPrice2, selectSquare1, selectSquare2} from '@/data/selectCondition.js'
+  import { publicRequirest } from '@/api/api.js'
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+        radio: '可售产业用地',
+        radioList: '可售产业用地',
+        selectArea: '',
+        selectPrice: '',
+        selectSquare: '',
+        rentList: ['待租','在租','租完'],
+        saleList: ['待售','在售','售完'],
+        checkSelectList: [], 
+        valueArea: '',
+        valuePrice: '',
+        valueSquare: '',
+        input: '',
+        inputList: '',
+        checkList: [],     
+        isSwitch: true,
+        stateCheck: false,
+        isArea: true,
+        listSelectValue: {  //选择条件传给地图
+            names: '',
+            jdcode: ['440307001','440307002','440307003','440307004','440307005','440307006','440307007','440307008'],
+            referenceprice: '>0',
+            area: '>0',
+            checklist: '',
+            ssType: '',
+            iptVal: ''
+        },
+        listSelect: {   //切换到列表选择条件
+            lsType: '',
+            inputList: ''
+        }  
+      };
+    },
+
+    components: {},
+
+    computed: {
+        
+    },
+
+    created() {
+        this.selectArea = selectArea;
+        this.selectPrice = selectPrice1;
+        this.selectSquare = selectSquare1;
+        let url = this.$route.path;
+        if(url === "/searchmap/switchlist") {
+            this.isSwitch = false;
+            this.isArea = false;
+        }
+    },
+
+    mounted() {
+        let ssType = this.$route.query.selectType;
+        let iptVal = this.$route.query.inputValue;
+        this.radio = ssType;
+        if(this.radio === "") {
+            this.radio = "可售产业用地";
+        }
+        this.input = iptVal;
+        this.listSelectValue.ssType = ssType;
+        this.listSelectValue.iptVal = iptVal;
+    },
+
+    methods: {
+        radioSelect: function(label) {
+           this.listSelectValue.ssType = label;
+           this.radioSelectFun(label);
+           this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+        },
+        radioListSelect: function(label) {
+            console.log(label);
+            this.listSelect.lsType = label;
+            this.$root.Bus.$emit("listenListSelectCon",this.listSelect);
+        },
+        radioSelectFun: function(name){
+            this.checkSelectList = [];
+            if(name == '可售产业用地'){
+                this.stateCheck = false;
+                this.selectPrice = selectPrice1;
+                this.selectSquare = selectSquare2;
+                // this.valueArea = selectArea[0].value;  //初始化选择条件
+                // this.listSelectValue.jdcode = this.valueArea.split(',');
+                // this.valuePrice = selectPrice1[0];
+                // this.valueSquare = selectSquare1[0];
+                // this.listSelectValue.iptVal = "";    //将搜索框内容置空
+                // this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+            }else if(name === "可租产业用房"){
+                this.stateCheck = true;
+                this.selectPrice = selectPrice2;
+                this.selectSquare = selectSquare2;
+                this.checkSelectList = this.rentList;
+                // this.valueArea = selectArea[0].value;  //初始化选择条件
+                // this.listSelectValue.jdcode = this.valueArea.split(',');
+                // this.valuePrice = selectPrice2[0];
+                // this.valueSquare = selectSquare2[0];
+                // this.listSelectValue.iptVal = "";    //将搜索框内容置空
+                // console.log(this.listSelectValue);
+                // this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+            }else{
+                this.stateCheck = true;
+                this.selectPrice = selectPrice2;
+                this.selectSquare = selectSquare2;
+                this.checkSelectList = this.saleList;
+                // this.valueArea = selectArea[0].value;  //初始化选择条件
+                // this.listSelectValue.jdcode = this.valueArea.split(',');
+                // this.valuePrice = selectPrice2[0];
+                // this.valueSquare = selectSquare2[0];
+                // this.listSelectValue.iptVal = "";    //将搜索框内容置空
+                // this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+            }
+        },
+        checkSaleAndSent: function() {
+            this.listSelectValue.iptVal = this.input;
+            this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+        }
+    },
+
+    watch: {
+        radio(newVal,oldVal) {
+            this.radioSelectFun(newVal);
+        },
+        valueArea(newVal,oldVal) {   //区域
+            this.listSelectValue.jdcode = newVal.split(',');
+            // this.listSelectValue.jdcode = newVal;
+            this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+        },
+        valuePrice(newVal,oldVal) {  //价格
+            this.listSelectValue.referenceprice = newVal;
+            this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+        },
+        valueSquare(newVal,oldVal) {  //面积
+            this.listSelectValue.area = newVal;
+            this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+        },
+        checkList(newVal,oldVal) {
+            let newArr = [];
+            if(newVal.length > 0) {
+                for(let i=0;i<newVal.length;i++) {
+                    newArr.push(`%${newVal[i]}%`);
+                }
+            }
+            this.listSelectValue.checklist = newArr;
+            this.$root.Bus.$emit("listenSelectCon",this.listSelectValue);
+        },
+        $route(to,from) {
+            if(to.path === "/searchmap/switchlist"){
+                this.isSwitch = false;
+                this.isArea = false;
+            }
+            if(to.path === "/searchmap/switchmap"){
+                this.isSwitch = true;
+                this.isArea = true;
+            }
+        }
+    },
+  }
+
+</script>
+<style lang=''>
+    .mapSearchSelect{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row-reverse;
+        text-align: left;
+    }
+
+    .right{
+        width: 200px;
+        height: 68px;
+        /* background: red; */
+        text-align: left;
+    }
+    .operate1{
+        margin-top: 12px;
+        height: 18px;
+        line-height: 18px;
+        margin-left: 20px;
+        background: url(../../../assets/images/home1.png) no-repeat 0 0;
+    }
+    .operate2 {
+        margin-top: 5px;
+        height: 18px;
+        line-height: 18px;
+        margin-left: 22px;
+        background: url(../../../assets/images/list1.png) no-repeat 0 0;
+    }
+    .operate3 {
+        margin-top: 5px;
+        height: 18px;
+        line-height: 18px;
+        margin-left: 22px;
+        background: url(../../../assets/images/earth.png) no-repeat 0 0;
+    }
+    .operate1 a,.operate2 a,.operate3 a{
+        margin-left: 20px;
+        color: #fff;
+        font-size: 14px;
+    }
+
+    .mapSearchSelect .el-input {
+        margin-top: 6px;
+    }
+    .mapSearchSelect .el-input__inner{
+        height: 24px;
+        line-height: 24px;
+        padding: 0 15px;
+    }
+    .mapSearchSelect .el-input-group {
+        width: 240px;
+    }
+    .mapSearchSelect .el-radio-group{
+        vertical-align: top;
+        margin-top: 6px;
+    }
+    .mapSearchSelect .el-radio-button__inner{
+        padding: 4px 18px;
+        padding-right: 19px;
+    }
+    .mapSearchSelect .el-select .el-input__inner {
+        width: 120px;
+    }
+    .mapSearchSelect .el-input__icon {
+        line-height: 26px;
+    }
+    .mapSearchSelect .el-checkbox-group {
+        display: inline-block;
+    }
+    .mapSearchSelect .el-checkbox__label{
+        padding-left: 2px;
+    }
+    .mapSearchSelect .el-checkbox+.el-checkbox {
+        margin-left: 14px;
+    }
+    .mapSearchSelect .el-checkbox:first-child{
+        color: rgb(243, 152, 0);
+        margin-left: 37px;
+    }
+    .mapSearchSelect .el-checkbox:nth-child(2){
+        color: rgb(143, 195, 31);
+    }
+    .mapSearchSelect .el-checkbox:last-child{
+        color: rgb(255,255,255);
+    }
+</style>

@@ -1,0 +1,1137 @@
+<template>
+  <div class="switchMapContainer">
+    <div id="switchMap">
+
+    </div>
+    <v-mapbutton @listenToMapLayer="getMapLayer"></v-mapbutton>
+    <v-leasesearchlist :leasesearch-list="mapListValue" @listenListPage="getListPage" @listenSortChange="getSortChange" @listToMapMark="getCurrentMapMark"></v-leasesearchlist>
+  </div>
+</template>
+
+<script>
+  import { switchMap } from '@/utils/publicMap.js'
+  import vLeasesearchlist from '@/components/detailblock/leasesearchlist'
+  import vMapbutton from '@/components/selectarea/maplayertype'  //地图卫星切换按钮
+  import { publicRequirest } from '@/api/api.js'
+  import { commonNames } from '../../utils/utils.js'
+  import Overlay from 'ol/overlay'
+  import { LoadMap } from '@/ol/zondy/openlayer_map_ol3_sz.js'
+  import { defaultStyles, pointMoveStyles_1 } from '@/ol/zondy/openLayer_theme_ol3.js'
+  import { styleFunction_1, InpointsetlledStyles_1 } from '@/ol/zondy/openLayer_theme_ol3.js'
+  import { formatChange } from '@/utils/utils.js'
+  export default {
+    name:'', 
+    props:[''],
+    data () {
+      return {
+          ssType: '',
+          iptVal: '',
+          mapSearchVal: '', //存储地图搜索框的值
+          bpid: '',
+          popOverLay: '',
+          getSelectCondition: '',   //获取选择条件
+          mapListValue: '',   //左侧列表数据
+          listPage: 1,
+          orderType: '',  //默认排序
+          clickPid: '',  //识别地图上的弹窗是否被点击
+          mapMarkVectorLayer: ''  //创建地图点的矢量图层
+          //landAndRoomLayer: null   //用地和用房矢量图层
+      };
+    },
+
+    components: {
+        vLeasesearchlist,
+        vMapbutton
+    },
+
+    computed: {},
+
+    created() {
+        document.title = this.$route.meta.title;
+    },
+
+    mounted() {
+       switchMap("switchMap");  //初始化地图
+       LoadMap.closeIndustryLayer();   //关闭产业图层
+
+       //this.landAndRoomLayer = window.openlayerSwitchMap.addVectorLayer('可租售用地用房',null,12,false);  //可租售用地用房矢量图层
+       this.mapMarkVectorLayer = window.openlayerSwitchMap.addVectorLayer('地图中心点',defaultStyles['listMapMark'],12,false);  //地图点矢量图层
+       window.openlayerSwitchMap.initSelect("pointermove",[this.mapMarkVectorLayer],pointMoveStyles_1,"");
+
+       this.markAndPloygonlayer = window.openlayerSwitchMap.addVectorLayer('地图图标面',styleFunction_1,12,false);   //图标面矢量图层
+       window.openlayerSwitchMap.initSelect("pointermove",[this.markAndPloygonlayer],InpointsetlledStyles_1,"");
+
+       this.ssType = this.$route.query.selectType;
+       this.iptVal = this.$route.query.inputValue;
+       this.bpid = this.$route.query.bpid;
+       if(this.bpid === undefined){   
+           this.bpid = "";
+       }
+       if(this.iptVal === "") {
+           this.iptVal = "";
+       }else{
+           this.iptVal = `%${this.iptVal}%`;
+       }
+
+       if(this.bpid !== "") {    //判断点击进入的时候是否有bpid存在，如果有则入口是在租售搜索页面的列表页的“查看地图”
+           if(this.ssType === "可售产业用地") {
+               publicRequirest.getSaleLandMapMark(this.bpid).then(res=> {
+                    let markData = res.data.list[0].ViewLand;
+                    let pos = `[${markData.x},${markData.y}]`;
+                    let posId = JSON.parse(pos);
+                    let data = {
+                        pointGeoJson: {
+                            features: [{
+                                geometry: markData.geometry,
+                                names: markData.names,
+                                dataType: 'listMapMark'
+                            }],
+                            type: "FeatureCollection"
+                        },
+                        polyGeoJson: {
+                            features: [{
+                                geometry: markData.geometrypoly
+                            }],
+                            type: "FeatureCollection"
+                        }
+                    }
+                    let stringData = JSON.stringify(data);
+                    let jsonData = JSON.parse(stringData);
+                    window.openlayerSwitchMap.changeLayerVector('地图图标面');
+                    // window.openlayerSwitchMap.drawGraphicNoZoom('point',this.mapMarkVectorLayer,jsonData);
+                    window.openlayerSwitchMap.drawGraphics(null,this.markAndPloygonlayer,jsonData);
+                    window.switchmap.getView().setCenter(posId);
+                    window.switchmap.getView().setZoom(2);
+                    this.mapListValue = res.data;
+               })
+           }
+           if(this.ssType === "可租产业用房") {
+               publicRequirest.getSentHouseMapMark(this.bpid).then(res=> {
+                    let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewRentalBuild;
+                        dataList.list.push(item);
+                    })
+                    let markData = dataList.list[0].ViewLand;
+                    let pos = `[${markData.x},${markData.y}]`;
+                    let posId = JSON.parse(pos);
+                    let data = {
+                        pointGeoJson: {
+                            features: [{
+                                geometry: markData.geometry,
+                                names: markData.names,
+                                dataType: 'listMapMark'
+                            }],
+                            type: "FeatureCollection"
+                        },
+                        polyGeoJson: {
+                            features: [{
+                                geometry: markData.geometrypoly
+                            }],
+                            type: "FeatureCollection"
+                        }
+                    }
+                    let stringData = JSON.stringify(data);
+                    let jsonData = JSON.parse(stringData);
+                    window.openlayerSwitchMap.changeLayerVector('地图图标面');
+                    window.openlayerSwitchMap.drawGraphics(null,this.markAndPloygonlayer,jsonData);
+                    window.switchmap.getView().setCenter(posId);
+                    window.switchmap.getView().setZoom(2);
+                    this.mapListValue = dataList; 
+                })
+           }
+           if(this.ssType === "可售产业用房") {
+               publicRequirest.getSaleHouseMapMark(this.bpid).then(res=> {
+                   let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewCellBuild;
+                        dataList.list.push(item);
+                    })
+                    let markData = dataList.list[0].ViewLand;
+                    let pos = `[${markData.x},${markData.y}]`;
+                    let posId = JSON.parse(pos);
+                    let data = {
+                        pointGeoJson: {
+                            features: [{
+                                geometry: markData.geometry,
+                                names: markData.names,
+                                dataType: 'listMapMark'
+                            }],
+                            type: "FeatureCollection"
+                        },
+                        polyGeoJson: {
+                            features: [{
+                                geometry: markData.geometrypoly
+                            }],
+                            type: "FeatureCollection"
+                        }
+                    }
+                    let stringData = JSON.stringify(data);
+                    let jsonData = JSON.parse(stringData);
+                    window.openlayerSwitchMap.changeLayerVector('地图图标面');
+                    window.openlayerSwitchMap.drawGraphics(null,this.markAndPloygonlayer,jsonData);
+                    window.switchmap.getView().setCenter(posId);
+                    window.switchmap.getView().setZoom(2);
+                    this.mapListValue = dataList; 
+               })
+           }
+       }else{
+           if(this.ssType === "可售产业用地") {
+                this.orderType = "modifydate-,bid+";
+                publicRequirest.getSearchListLandInforInit(this.iptVal).then(res=> {   //首页不传参进来时请求
+                    let data = res.data.list;
+                    // data.forEach(element => {
+                    //     this.initPopupMarks(element.ViewLand.x,element.ViewLand.y,element.ViewLand.names);
+                    // });
+                    this.commonLandNames(data);
+                })
+                this.saleLandlistDisplay(this.listPage,this.iptVal,this.orderType);
+            }
+            if(this.ssType === "可租产业用房") {
+                this.orderType = "modifydate-,buildid+";
+                let str = `"@column": "geometry,parkid,area,names,btotal,introimg,x,y",
+                                "landstatus$": [
+                                    "%待租%",
+                                    "%在租%",
+                                    "%租完%"
+                                ],
+                                "@order": "names+",`;
+                if(this.iptVal !== "") {
+                    str += `"names$": "${this.iptVal}",`;
+                }
+                str = str.substring(0, str.lastIndexOf(','));
+                let dataJsonStr = `{${str}}`;
+                let json = JSON.parse(dataJsonStr);
+                publicRequirest.getSentHouseMark(json).then(res=> {
+                        let data = res.data.list;
+                        if(data.length>0){
+                            this.commonNames(data);
+                        }
+                })
+                this.sentHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+            }
+            if(this.ssType === "可售产业用房") {
+                this.orderType = "modifydate-,buildid+";
+                let str = `"@column": "geometry,parkid,area,names,btotal,introimg,x,y",
+                                "landstatus$": [
+                                    "%待售%",
+                                    "%在售%",
+                                    "%售完%"
+                                ],
+                                "@order": "names+",`;
+                if(this.iptVal !== "") {
+                    str += `"names$": "${this.iptVal}",`;
+                }
+                str = str.substring(0, str.lastIndexOf(','));
+                let dataJsonStr = `{${str}}`;
+                let json = JSON.parse(dataJsonStr);
+                publicRequirest.getSaleHouseMark(json).then(res=> {
+                    console.log(res);
+                    let data = res.data.list;
+                    if(data.length>0){
+                            this.commonSaleNames(data);
+                        }
+                })
+                this.saleHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+            }
+       }
+       this.$root.Bus.$on("listenSelectCon",(val)=> {   //点击选择不同类型条件和选择查询条件时如区域、单价、面积时的数据
+           this.mapSearchVal = "";
+           if(val.iptVal === "") {
+               //val.iptVal = "";
+               this.mapSearchVal = "";
+           }else {
+               //val.iptVal = `%${val.iptVal}%`;
+               this.mapSearchVal = `%${val.iptVal}%`;
+           }
+           this.ssType = val.ssType;
+           //this.iptVal = val.iptVal;
+           this.iptVal = this.mapSearchVal;
+           this.listPage = 1;
+           //this.orderType = "modifydate-,buildid+";
+           this.bpid = "";
+           this.clickPid = "";
+           this.getSelectCondition = val;
+           this.removeAllOverLay();
+           window.openlayerSwitchMap.changeLayerVector('');
+           window.switchmap.getView().setCenter([132019.42062761972,36308.13768113985]);
+           window.switchmap.getView().setZoom(2);
+           if(val.ssType === "可售产业用地") {
+               this.orderType = "modifydate-,bid+";
+               publicRequirest.getSearchListLandFromCondition(this.mapSearchVal,val.jdcode,val.referenceprice,val.area).then(res=> {
+                    let data = res.data.list;
+                    if(res.data.list && res.data.list.length > 0) {
+                        // data.forEach(element => {
+                        //     this.initPopupMarks(element.ViewLand.x,element.ViewLand.y,element.ViewLand.names);
+                        // });
+                        this.commonLandNames(data);
+                    }
+               })
+               this.getMapListLandFromCondition(this.mapSearchVal,this.listPage,val.jdcode,val.referenceprice,val.area,this.orderType);
+           }
+           if(val.ssType === "可租产业用房") {
+               this.orderType = "modifydate-,buildid+";
+                this.getMapMarksFromCondition(this.mapSearchVal,val.checklist,val.jdcode,val.referenceprice,val.area);
+                this.getSentHouseListFromCondition(this.mapSearchVal,val.checklist,this.listPage,val.jdcode,val.referenceprice,val.area,this.orderType);
+           }
+           if(val.ssType === "可售产业用房") {
+               this.orderType = "modifydate-,buildid+";
+               this.getSaleMarksFromCondition(this.mapSearchVal,val.checklist,val.jdcode,val.referenceprice,val.area);
+               this.getSaleHouseListFromCondition(this.mapSearchVal,val.checklist,this.listPage,val.jdcode,val.referenceprice,val.area,this.orderType);
+           }
+       });
+       this.$root.Bus.$on("listenSelectCondition", (val)=> {
+           this.listPage = 1;
+           //this.orderType = "modifydate-,buildid+";
+           this.bpid = "";
+           this.clickPid = "";
+           this.removeAllOverLay();
+           window.openlayerSwitchMap.changeLayerVector('');
+           window.switchmap.getView().setCenter([132019.42062761972,36308.13768113985]);
+           window.switchmap.getView().setZoom(2);
+           if(val.areaVal === '') {
+               this.getSelectCondition.jdcode = ['440307001','440307002','440307003','440307004','440307005','440307006','440307007','440307008'];
+           }
+           if(val.priceVal === '') {
+               this.getSelectCondition.referenceprice = '>=0';
+           }
+           if(val.squareVal === '') {
+               this.getSelectCondition.area = '>=0';
+           }
+           if(val.checklistVal.length > 0) {
+               let newArr = [];
+               for(let i=0;i<val.checklistVal.length;i++) {
+                    newArr.push(`%${val.checklistVal[i]}%`);
+               }
+               this.getSelectCondition.checklist = newArr;
+           }else {
+               this.getSelectCondition.checklist = "";
+           }
+           if(this.ssType === "可售产业用地") {
+               this.orderType = "modifydate-,bid+";
+               publicRequirest.getSearchListLandFromCondition(this.iptVal,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area).then(res=> {
+                    let data = res.data.list;
+                    if(res.data.list && res.data.list.length > 0) {
+                        // data.forEach(element => {
+                        //     this.initPopupMarks(element.ViewLand.x,element.ViewLand.y,element.ViewLand.names,element.jdcode);
+                        // });
+                        this.commonLandNames(data);
+                    }
+               })
+               this.getMapListLandFromCondition(this.iptVal,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+           }
+           if(this.ssType === "可租产业用房") {
+               this.orderType = "modifydate-,buildid+";
+               this.getMapMarksFromCondition(this.iptVal,this.getSelectCondition.checklist,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area);
+               this.getSentHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+           }
+           if(this.ssType === "可售产业用房") {
+               this.orderType = "modifydate-,buildid+";
+               this.getSaleMarksFromCondition(val.iptVal,val.checklist,val.jdcode,val.referenceprice,val.area);
+               this.getSaleHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+           }
+       })
+    },
+
+    methods: {
+        initPopupMarks: function(x,y,names,btotal,jdcode) {   //加载地图图标弹窗--可售产业用地
+            let this_ = this;
+            let popup = document.createElement("div");
+            let popId = `popupInfo${(Math.random()*(100-1) + 1).toFixed(2)}`;
+            popup.setAttribute("id",popId);
+            popup.setAttribute("class","ol-popup olPopup");
+            document.body.appendChild(popup);
+            let popContainer = document.getElementById(popId);
+            popContainer.innerHTML = `<p>${names}(${btotal}块)</p>`;
+            this.popOverLay = new Overlay({
+                id: popId,
+                element: popContainer,
+                position:[x,y],
+                autoPan: true,
+                autoPanAnimation: {
+                    duration: 250
+                }
+            });
+            window.switchmap.addOverlay(this.popOverLay);
+            popContainer.onclick = function(event) {
+                event.defaultPrevented;
+                this_.clickPid = jdcode;
+                this_.clickPopMarkDisplayList(this_.listPage,jdcode,this_.orderType);
+            }
+        },
+        initSentBuildPopupMarks: function(x,y,names,btotal,parkid) {   //加载地图图标弹窗--可租产业用房
+            let this_ = this;
+            let popup = document.createElement("div");
+            let popId = `popupInfo${(Math.random()*(100-1) + 1).toFixed(2)}`;
+            popup.setAttribute("id",popId);
+            popup.setAttribute("class","ol-popup olPopup");
+            document.body.appendChild(popup);
+            let popContainer = document.getElementById(popId);
+            popContainer.innerHTML = `<p>${names}(${btotal}套)</p>`;
+            this.popOverLay = new Overlay({
+                id: popId,
+                element: popContainer,
+                position:[x,y],
+                autoPan: true,
+                autoPanAnimation: {
+                    duration: 250
+                }
+            });
+            window.switchmap.addOverlay(this.popOverLay);
+            popContainer.onclick = function(event) {
+                event.defaultPrevented;
+                this_.clickPid = parkid;
+                this_.clickPopMarkDisplayList(this_.listPage,parkid,this_.orderType);
+            }
+        },
+        removeAllOverLay: function() {   //移除所有弹窗
+            let allOverlyers = window.switchmap.getOverlays();
+            for(let i=allOverlyers.array_.length-1;i>=0;i--) {
+                window.switchmap.removeOverlay(allOverlyers.array_[i]);
+            }
+        },
+        getListPage: function(val) {   //分页
+            if(this.ssType === "可售产业用地") {
+                this.orderType = "modifydate-,bid+";
+                this.saleLandlistDisplay(val,this.iptVal,this.orderType);
+            }
+            if(this.ssType === "可租产业用房") {
+                this.orderType = "modifydate-,buildid+";
+                if(this.getSelectCondition === ""){
+                    if(this.clickPid !== "") {
+                        this.clickPopMarkDisplayList(val,this.clickPid,this.orderType);
+                    }else{
+                        this.sentHouseListDisplay(this.iptVal,val,this.orderType);
+                    }
+                }else{
+                    if(this.clickPid !== "") {
+                        this.clickPopMarkDisplayList(val,this.clickPid,this.orderType);
+                    }else {
+                        this.getSentHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,val,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                    }
+                }
+            }
+            if(this.ssType === "可售产业用房") {
+                this.orderType = "modifydate-,buildid+";
+                if(this.getSelectCondition === "") {
+                    if(this.clickPid !== "") {
+                        this.clickPopMarkDisplayList(val,this.clickPid,this.orderType);
+                    }else{
+                        this.saleHouseListDisplay(this.iptVal,val,this.orderType);
+                    }
+                }else{
+                    if(this.clickPid !== "") {
+                        this.clickPopMarkDisplayList(val,this.clickPid,this.orderType);
+                    }else{
+                        this.getSaleHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,val,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                    }
+                }
+            }
+        },
+        getSortChange: function(val) {     //排序操作
+            if(this.bpid !== ""){
+                window.openlayerSwitchMap.changeLayerVector('');
+                this.mapListValue = "";
+                this.$message({
+                    message: '无该条件下数据！！！',
+                    type: 'warning'
+                });
+                return false;
+            }
+            if(this.getSelectCondition !== ""){   //select的选择条件
+                if(val === "默认排序") {
+                    //this.orderType = "modifydate-,buildid+";
+                    if(this.ssType === "可售产业用地"){
+                        this.orderType = "modifydate-,bid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getMapListLandFromCondition(this.iptVal,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可租产业用房") {
+                        this.orderType = "modifydate-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getSentHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可售产业用房") {
+                        this.orderType = "modifydate-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getSaleHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                }
+                if(val === "价格") {
+                    //this.orderType = "referencepricemax-,referencepricemin-,buildid+";
+                    if(this.ssType === "可售产业用地") {
+                        this.orderType = "referencepricemax-,referencepricemin-,bid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getMapListLandFromCondition(this.iptVal,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType)
+                        }
+                    }
+                    if(this.ssType === "可租产业用房") {
+                        this.orderType = "referencepricemax-,referencepricemin-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getSentHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可售产业用房") {
+                        this.orderType = "referencepricemax-,referencepricemin-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getSaleHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                }
+                if(val === "面积") {
+                    //this.orderType = "area-,buildid+";
+                    if(this.ssType === "可售产业用地") {
+                        this.orderType = "area-,bid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getMapListLandFromCondition(this.iptVal,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType)
+                        }
+                        //this.getMapListLandFromCondition(this.iptVal,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType)
+                    }
+                    if(this.ssType === "可租产业用房") {
+                        this.orderType = "area-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getSentHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可售产业用房") {
+                        this.orderType = "area-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.getSaleHouseListFromCondition(this.iptVal,this.getSelectCondition.checklist,this.listPage,this.getSelectCondition.jdcode,this.getSelectCondition.referenceprice,this.getSelectCondition.area,this.orderType);
+                        }
+                    }
+                }
+            }else {
+                if(val === "默认排序") {
+                    //this.orderType = "modifydate-,buildid+";
+                    if(this.ssType === "可售产业用地") {
+                        this.orderType = "modifydate-,bid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.saleLandlistDisplay(this.listPage,this.iptVal,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可租产业用房") {
+                        this.orderType = "modifydate-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.sentHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可售产业用房") {
+                        this.orderType = "modifydate-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.saleHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+                        }
+                    }
+                }
+                if(val === "价格") {
+                    //this.orderType = "referencepricemax-,referencepricemin-,buildid+";
+                    if(this.ssType === "可售产业用地") {
+                        this.orderType = "referencepricemax-,referencepricemin-,bid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.saleLandlistDisplay(this.listPage,this.iptVal,this.orderType);
+                        }
+                        //this.saleLandlistDisplay(this.listPage,this.iptVal,this.orderType);
+                    }
+                    if(this.ssType === "可租产业用房") {
+                        this.orderType = "referencepricemax-,referencepricemin-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.sentHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可售产业用房") {
+                        this.orderType = "referencepricemax-,referencepricemin-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.saleHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+                        }
+                    }
+                }
+                if(val === "面积") {
+                    //this.orderType = "area-,buildid+";
+                    if(this.ssType === "可售产业用地") {
+                        this.orderType = "area-,bid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.saleLandlistDisplay(this.listPage,this.iptVal,this.orderType);
+                        }
+                        //this.saleLandlistDisplay(this.listPage,this.iptVal,this.orderType);
+                    }
+                    if(this.ssType === "可租产业用房") {
+                        this.orderType = "area-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.sentHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+                        }
+                    }
+                    if(this.ssType === "可售产业用房") {
+                        this.orderType = "area-,buildid+";
+                        if(this.clickPid !== "") {
+                            this.clickPopMarkDisplayList(this.listPage,this.clickPid,this.orderType);
+                        }else{
+                            this.saleHouseListDisplay(this.iptVal,this.listPage,this.orderType);
+                        }
+                    }
+                }
+            }
+        },
+        saleLandlistDisplay: function(page,name,order) {    //左侧列表数据请求(可售产业用地)
+            publicRequirest.getSearchMapListInfor(page,name,order).then(res=> {
+                this.mapListValue = res.data;
+            })
+        },
+        sentHouseListDisplay: function(name,page,order) {    //左侧列表数据(可租产业用房)
+            let str = `"@column": "geometry,buildid,parkid,area,names,bname,introimg,btotal,address,landstatus,referenceprice,x,y",
+                        "landstatus$": [
+                            "%待租%",
+                            "%在租%",
+                            "%租完%"
+                        ],
+                        "@order": "${order}",`
+            if(name !== "") {
+                str += `"names$": "${name}",`;
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSentHouseList(page,json).then(res=> {
+                let dataList = {
+                    list: [],
+                    total: ''
+                }
+                dataList.total = res.data.total;
+                res.data.list.forEach(element=> {
+                    let item = {
+                        ViewLand: ''
+                    }
+                    item.ViewLand = element.ViewRentalBuild;
+                    dataList.list.push(item);
+                })
+                this.mapListValue = dataList;
+            })
+        },
+        saleHouseListDisplay: function(name,page,order) {     //左侧列表数据(可售产业用房)
+            let str = `"@column": "geometry,buildid,parkid,area,names,introimg,bname,btotal,address,landstatus,referenceprice,x,y",
+                        "landstatus$": [
+                            "%待售%",
+                            "%在售%",
+                            "%售完%"
+                        ],
+                        "@order": "${order}",`
+            if(name !== "") {
+                str += `"names$": "${name}",`;
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSaleHouseList(page,json).then(res=> {
+                let dataList = {
+                    list: [],
+                    total: ''
+                }
+                dataList.total = res.data.total;
+                res.data.list.forEach(element=> {
+                    let item = {
+                        ViewLand: ''
+                    }
+                    item.ViewLand = element.ViewCellBuild;
+                    dataList.list.push(item);
+                })
+                this.mapListValue = dataList;
+            })
+        },
+        getMapListLandFromCondition: function(name,page,jdcode,referencepricemin,area,order) {    //根据筛选条件获取列表数据(可售产业用地)
+            publicRequirest.getSearchMapListFromCondition(name,page,jdcode,referencepricemin,area,order).then(res=> {
+                if(res.data.list && res.data.list.length > 0) {
+                    this.mapListValue = res.data;
+                }else{
+                    this.$message({
+                        message: '无该条件下数据！！！',
+                        type: 'warning'
+                    });
+                    this.mapListValue = "";
+                }
+            })
+        },
+        getMapMarksFromCondition: function(name,status,jdcode,referenceprice,area) {    //根据筛选条件获取地图弹窗点(可租产业用房)
+            var jdco = '[';
+            for(var i=0;i<jdcode.length;i++) {
+                jdco += '"' + jdcode[i] + '"' + ",";
+            }
+            jdco = jdco.substring(0, jdco.lastIndexOf(','));
+            jdco += ']';
+            let str = ' "@column": "geometry,parkid,area,names,btotal,introimg,x,y",' +
+                      ' "jdcode{}":' + jdco + ',' +
+                      ' "referencepricemin&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "referencepricemax&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "@combine": "referencepricemin&{},referencepricemax&{}",' +
+                      ' "area&{}":' + "\"" + area + "\"" + ',' +
+                      ' "@order": "names+",';
+            if(name !== ""){
+                // str += `"names$": ${name},`;
+                str += '"names$":' + "\"" + name + "\"" + ','
+            }
+            if(status !== "" && status.length>0) {
+                let sta = '[';
+                for(let i=0;i<status.length;i++) {
+                    sta += '"' + status[i] + '"' + ",";
+                }
+                sta = sta.substring(0, sta.lastIndexOf(','));
+                sta += ']';
+                str += '"landstatus$":' + sta + ','
+            }else{
+                str += '"landstatus$":' + '["%待租%","%在租%","%租完%"]' + ','
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSentHouseMarkFromCondition_1(json).then(res=> {
+                let data = res.data.list;
+                if(data && data.length>0){
+                    this.commonNames(data);
+                }else{
+                    this.$message({
+                        message: '无该条件下数据！！！',
+                        type: 'warning'
+                    });
+                }
+            })
+        },
+        getSaleMarksFromCondition: function(name,status,jdcode,referenceprice,area) {    //根据筛选条件获取地图弹窗点(可售产业用房)
+            var jdco = '[';
+            for(var i=0;i<jdcode.length;i++) {
+                jdco += '"' + jdcode[i] + '"' + ",";
+            }
+            jdco = jdco.substring(0, jdco.lastIndexOf(','));
+            jdco += ']';
+            let str = ' "@column": "geometry,parkid,area,names,btotal,introimg,x,y",' +
+                      ' "jdcode{}":' + jdco + ',' +
+                      ' "referencepricemin&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "referencepricemax&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "@combine": "referencepricemin&{},referencepricemax&{}",' +
+                      ' "area&{}":' + "\"" + area + "\"" + ',' +
+                      ' "@order": "names+",';
+            if(name !== ""){
+                // str += `"names$": ${name},`;
+                str += '"names$":' + "\"" + name + "\"" + ','
+            }
+            if(status !== "" && status.length>0) {
+                let sta = '[';
+                for(let i=0;i<status.length;i++) {
+                    sta += '"' + status[i] + '"' + ",";
+                }
+                sta = sta.substring(0, sta.lastIndexOf(','));
+                sta += ']';
+                str += '"landstatus$":' + sta + ','
+            } 
+            else {
+                str += '"landstatus$":' + '["%待售%","%在售%","%售完%"]' + ','
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSaleHouseMarkFromCondition(json).then(res=> {
+                let data = res.data.list;
+                if(data && data.length>0){
+                    this.commonSaleNames(data);
+                }else{
+                    this.$message({
+                        message: '无该条件下数据！！！',
+                        type: 'warning'
+                    });
+                }
+            })
+        },
+        getSentHouseListFromCondition: function(name,status,page,jdcode,referenceprice,area,order) {   //根据筛选条件获取列表数据(可租产业用房)
+            var jdco = '[';
+            for(var i=0;i<jdcode.length;i++) {
+                jdco += '"' + jdcode[i] + '"' + ",";
+            }
+            jdco = jdco.substring(0, jdco.lastIndexOf(','));
+            jdco += ']';
+            let str = ' "@column": "geometry,buildid,parkid,area,names,bname,introimg,btotal,address,landstatus,referenceprice,x,y",' +
+                      ' "jdcode{}":' + jdco + ',' +
+                      ' "referencepricemin&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "referencepricemax&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "@combine": "referencepricemin&{},referencepricemax&{}",' +
+                      ' "area&{}":' + "\"" + area + "\"" + ',' +
+                      ' "@order":' + "\"" + order + "\"" + ',';
+            if(name !== ""){
+                // str += `"names$": ${name},`;
+                str += '"names$":' + "\"" + name + "\"" + ','
+            }
+            if(status !== "" && status.length>0) {
+                let sta = '[';
+                for(let i=0;i<status.length;i++) {
+                    sta += '"' + status[i] + '"' + ",";
+                }
+                sta = sta.substring(0, sta.lastIndexOf(','));
+                sta += ']';
+                str += '"landstatus$":' + sta + ','
+            } else {
+                str += '"landstatus$":' + '["%待租%","%在租%","%租完%"]' + ','
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSentHouseList(page,json).then(res=> {
+                let dataList = {
+                    list: [],
+                    total: ''
+                }
+                dataList.total = res.data.total;
+                if(res.data.list && res.data.list.length>0) {
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewRentalBuild;
+                        dataList.list.push(item);
+                    })
+                    this.mapListValue = dataList;
+                }else{
+                    this.mapListValue = "";
+                }
+            })
+        },
+        getSaleHouseListFromCondition: function(name,status,page,jdcode,referenceprice,area,order) {    //根据筛选条件获取列表数据(可售产业用房)
+            var jdco = '[';
+            for(var i=0;i<jdcode.length;i++) {
+                jdco += '"' + jdcode[i] + '"' + ",";
+            }
+            jdco = jdco.substring(0, jdco.lastIndexOf(','));
+            jdco += ']';
+            let str = ' "@column": "geometry,buildid,parkid,area,names,introimg,bname,btotal,address,landstatus,referenceprice,x,y",' +
+                      ' "jdcode{}":' + jdco + ',' +
+                      ' "referencepricemin&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "referencepricemax&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "@combine": "referencepricemin&{},referencepricemax&{}",' +
+                      ' "area&{}":' + "\"" + area + "\"" + ',' +
+                      ' "@order":' + "\"" + order + "\"" + ',';
+            if(name !== ""){
+                // str += `"names$": ${name},`;
+                str += '"names$":' + "\"" + name + "\"" + ','
+            }
+            if(status !== "" && status.length>0) {
+                let sta = '[';
+                for(let i=0;i<status.length;i++) {
+                    sta += '"' + status[i] + '"' + ",";
+                }
+                sta = sta.substring(0, sta.lastIndexOf(','));
+                sta += ']';
+                str += '"landstatus$":' + sta + ','
+            }else {
+                str += '"landstatus$":' + '["%待售%","%在售%","%售完%"]' + ','
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSaleHouseList(page,json).then(res=> {
+                let dataList = {
+                    list: [],
+                    total: ''
+                }
+                dataList.total = res.data.total;
+                if(res.data.list && res.data.list.length>0) {
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewCellBuild;
+                        dataList.list.push(item);
+                    })
+                    this.mapListValue = dataList;
+                }else{
+                    this.mapListValue = "";
+                }
+            })
+        },
+        clickPopMarkDisplayList: function(page,parkid,order) {   //点击地图上的弹窗点获取左侧列表数据
+            if(this.ssType === "可售产业用地") {
+                publicRequirest.clickPopDisplayLandList(page,parkid,order).then(res=> {
+                    let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewLand;
+                        dataList.list.push(item);
+                    })
+                    this.mapListValue = dataList;
+                })
+            }
+            if(this.ssType === "可租产业用房") {  
+                publicRequirest.clickPopDisplayList(page,parkid,order).then(res=> {
+                    let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewRentalBuild;
+                        dataList.list.push(item);
+                    })
+                    this.mapListValue = dataList;
+                })
+            }
+            if(this.ssType === "可售产业用房") {
+                publicRequirest.clickSalePopDisplayList(page,parkid,order).then(res=> {
+                    let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    res.data.list.forEach(element=> {
+                        let item = {
+                            ViewLand: ''
+                        }
+                        item.ViewLand = element.ViewCellBuild;
+                        dataList.list.push(item);
+                    })
+                    this.mapListValue = dataList;
+                })
+            }
+        },
+        commonLandNames: function(data) {   //将可售产业用地同jdname的东西归为一类
+            let item = {};
+            let dest = [];
+            for(var i=0;i<data.length;i++){   //将相同名称得园区归类到一起
+                let ai = data[i];
+                if(!item[ai.ViewLand.jdname]) {
+                    dest.push({
+                        bid: ai.ViewLand.bid,
+                        names: ai.ViewLand.names,
+                        jdname: ai.ViewLand.jdname,
+                        jdcode: ai.ViewLand.jdcode,
+                        geometry: ai.ViewLand.geometry,
+                        x: ai.ViewLand.x,
+                        y: ai.ViewLand.y,
+                        listArr: [ai.ViewLand]
+                    });
+                    item[ai.ViewLand.jdname] = ai.ViewLand;
+                }else{
+                    for(var j = 0; j < dest.length; j++) {
+                        var dj = dest[j];
+                        if(dj.jdname == ai.ViewLand.jdname) {
+                            dj.listArr.push(ai.ViewLand);
+                            break;
+                        }
+                    }
+                }
+            }
+            dest.forEach(element => {
+                this.initPopupMarks(element.x,element.y,element.jdname,element.listArr.length,element.jdcode);
+            });
+        },
+        commonNames: function(data) {    //由于加载过来的数据是不分开同名称的，所以这里将同名称的归类为一起
+            let item = {};
+            let dest = [];
+            for(var i=0;i<data.length;i++){   //将相同名称得园区归类到一起
+                let ai = data[i];
+                if(!item[ai.ViewRentalBuild.names]) {
+                    dest.push({
+                        names: ai.ViewRentalBuild.names,
+                        geometry: ai.ViewRentalBuild.geometry,
+                        parkid: ai.ViewRentalBuild.parkid,
+                        btotal: ai.ViewRentalBuild.btotal,
+                        x: ai.ViewRentalBuild.x,
+                        y: ai.ViewRentalBuild.y,
+                        listArr: [ai.ViewRentalBuild]
+                    });
+                    item[ai.ViewRentalBuild.names] = ai.ViewRentalBuild;
+                }else{
+                    for(var j = 0; j < dest.length; j++) {
+                        var dj = dest[j];
+                        if(dj.names == ai.ViewRentalBuild.names) {
+                            dj.listArr.push(ai.ViewRentalBuild);
+                            break;
+                        }
+                    }
+                }
+            }
+            dest.forEach(element => {
+                this.initSentBuildPopupMarks(element.x,element.y,element.names,element.btotal,element.parkid);
+            });
+        },
+        commonSaleNames: function(data) {    //由于加载过来的数据是不分开同名称的，所以这里将同名称的归类为一起
+            let item = {};
+            let dest = [];
+            for(var i=0;i<data.length;i++){   //将相同名称得园区归类到一起
+                let ai = data[i];
+                if(!item[ai.ViewCellBuild.names]) {
+                    dest.push({
+                        names: ai.ViewCellBuild.names,
+                        geometry: ai.ViewCellBuild.geometry,
+                        parkid: ai.ViewCellBuild.parkid,
+                        btotal: ai.ViewCellBuild.btotal,
+                        x: ai.ViewCellBuild.x,
+                        y: ai.ViewCellBuild.y,
+                        listArr: [ai.ViewCellBuild]
+                    });
+                    item[ai.ViewCellBuild.names] = ai.ViewCellBuild;
+                }else{
+                    for(var j = 0; j < dest.length; j++) {
+                        var dj = dest[j];
+                        if(dj.names == ai.ViewCellBuild.names) {
+                            dj.listArr.push(ai.ViewCellBuild);
+                            break;
+                        }
+                    }
+                }
+            }
+            dest.forEach(element => {
+                this.initSentBuildPopupMarks(element.x,element.y,element.names,element.btotal,element.parkid);
+            });
+        },
+        getCurrentMapMark: function(val) {   //鼠标移动到列表上时地图上添加相应点坐标
+            if(this.bpid === ""){
+                let data = {
+                    pointGeoJson: {
+                        features: [{
+                            geometry: val.point,
+                            names: val.names,
+                            dataType: 'listMapMark'
+                        }],
+                        type: "FeatureCollection"
+                    }
+                }
+                let stringData = JSON.stringify(data);
+                let jsonData = JSON.parse(stringData);
+                window.openlayerSwitchMap.changeLayerVector('地图中心点');
+                window.openlayerSwitchMap.drawGraphicNoZoom('point',this.mapMarkVectorLayer,jsonData);
+            }
+        },
+        getMapLayer: function(val) {   //切换地图类型
+            if(val === "卫星") {
+                LoadMap.changeDefaultBaseLayer_evt("avi");
+            }
+            if(val === "地图") {
+                LoadMap.changeDefaultBaseLayer_evt("image");
+            }
+        }
+    },
+
+    watch: {
+        
+    }
+
+  }
+
+</script>
+<style lang=''>
+    .switchMapContainer{
+        width: 100%;
+        height: 100%;
+    }
+    #switchMap{
+        width: 100%;
+        height: 100%;
+    }
+    .switchMapContainer .ol-popup {
+        position: absolute;
+        background-color: #EA2F15;
+        color: #000;
+        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid #eeeeee;
+        bottom: 36px;
+        left: -50px;
+        min-width: 160px;
+        font-family: '微软雅黑 Regular';
+        font-size: 14px;
+        /* z-index: 99999; */
+    }
+    .switchMapContainer .ol-popup p {
+        width: 100%;
+        font-size: 14px;
+        color: #ffffff;
+        text-align: center;
+        cursor: pointer;
+    }
+    .switchMapContainer .ol-popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+    }
+    .switchMapContainer .ol-popup:after {
+        border-top-color: #EA2F15;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+    }
+    .switchMapContainer .ol-popup:before {
+        border-top-color: #EA2F15;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+    }
+    .switchMapContainer .ol-popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+        color: black;
+    }
+    .switchMapContainer .ol-popup-closer:after {
+        content: "✖";
+    }
+</style>

@@ -1,0 +1,53 @@
+<template>
+  <!-- 宣传视频 -->
+  <div class="videoPublicity">
+      <h3>龙岗宣传视频</h3>
+      <div class="videoContainer">
+          <video src=""></video>
+      </div>     
+  </div>
+</template>
+
+<script>
+
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .videoPublicity {
+        width: 100%;
+        height: 289px;
+        /* background: red; */
+        margin-top: 10px;
+        border: 1px solid #A3A5A7;
+        box-sizing: border-box;                                
+    }
+    .videoPublicity h3{
+        padding: 6px 0;
+        text-indent: 5px;
+        font-size: 16px;
+        color: #fff;
+        background: #99cc33;
+    }
+</style>

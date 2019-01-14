@@ -1,0 +1,51 @@
+import axios from 'axios'
+
+const base_url = "http://172.17.6.123:8080/"
+const get_url = base_url + "get"
+const download_url = base_url + 'exportFiles'
+const Url = {
+    getMsgContent: get_url,
+    downloadFile: download_url
+}
+
+export const publicRequirest = {
+    //规划信息第一步请求
+    getMsgContent: function(param) {
+        return axios.get(Url.getMsgContent + '/' + encodeURIComponent(JSON.stringify(param)),{})
+    },
+    //规划信息弹窗文件下载和上传时间请求
+    getFileTime: function(bid){
+        return axios.get(Url.getMsgContent + '/' + encodeURIComponent(JSON.stringify({
+            "fileTime[]": {
+                "TsupFile": {
+                    "pid": bid,
+                    "@column": "url,filename,uploadtime"
+                }
+            },
+            "format": true
+        })),{})
+    },
+    //文件下载请求
+    downloadFile: function(filename,url){
+        return axios.get(Url.downloadFile,{
+            params: {
+                filename: filename,
+                url: url
+            }
+        })
+    },
+
+    //政策信息请求
+    getPolicyMsg: function(num) {
+        return axios.get(Url.getMsgContent + '/' + encodeURIComponent(JSON.stringify({
+            "policy[]": {
+                "TsupPolicy": {
+                    'classify': num,
+                    '@column': 'bid,title,content',
+                    '@order': 'modifydate-'
+                }
+            },
+            "format": true
+        })),{})
+    }
+}

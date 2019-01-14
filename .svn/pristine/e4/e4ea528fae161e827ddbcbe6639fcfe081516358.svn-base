@@ -1,0 +1,78 @@
+<template>
+  <div class="indexSearch">
+    <el-input placeholder="请输入内容" v-model="input5" class="input-with-select">
+        <el-select v-model="select" slot="prepend" placeholder="请选择">
+            <el-option label="产业用地" value="1"></el-option>
+            <el-option label="产业园区" value="2"></el-option>
+            <el-option label="企业" value="3"></el-option>
+            <el-option label="工业区" value="4"></el-option>
+        </el-select>
+    <el-button slot="append" icon="el-icon-search"></el-button>
+    </el-input>
+    <el-input placeholder="请输入内容" v-model="input5" class="input-with-select">
+        <el-select v-model="select" slot="prepend" placeholder="请选择">
+            <el-option label="产业用地" value="1"></el-option>
+            <el-option label="可租产业用房" value="2"></el-option>
+            <el-option label="可售产业用房" value="3"></el-option>
+        </el-select>
+        <el-button slot="append" icon="el-icon-search"></el-button>
+    </el-input>
+  </div>
+</template>
+
+<script>
+
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          input5: '',
+          select: ''
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .indexSearch{
+        height: 68px;
+        line-height: 68px;
+    }
+    .indexSearch  .el-select .el-input {
+        width: 130px;
+    }
+    .indexSearch .el-input-group {
+        width: 360px;
+    }
+    .indexSearch .el-input-group__prepend{
+        padding: 0 12px;
+    }
+    .indexSearch .el-input__inner {
+        height: 32px;
+        line-height: 32px;
+    }
+    .indexSearch .el-input__icon {
+        line-height: 32px;
+    }
+    .el-select-dropdown__list {
+        padding-bottom: 14px;
+    }
+    .indexSearch .el-input-group__append {
+        background: #2EAEE3;
+        color: #000;
+    }
+</style>

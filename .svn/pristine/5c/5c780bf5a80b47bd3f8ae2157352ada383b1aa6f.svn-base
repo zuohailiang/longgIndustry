@@ -1,0 +1,124 @@
+<template>
+  <!-- 创客信息详情 -->
+  <div class="createGuestInfor">
+      <el-container>
+        <el-header>
+            <v-header></v-header>
+        </el-header>
+        <el-container>
+            <div class="guestContainer">
+                <el-scrollbar style="height: 100%">
+                    <div class="guestDetail">
+                        <div class="createGuestDisplay">
+                            <div class="createGuestLeft">
+                                <div>
+                                    <v-areamsg></v-areamsg>
+                                </div>
+                            </div>
+                            <div class="createGuestRight">
+                                <div>
+                                    <v-video></v-video>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="matingMap">
+                            <v-matingmap></v-matingmap>
+                        </div>
+                    </div>
+                </el-scrollbar>
+            </div>
+        </el-container>
+    </el-container>
+  </div>
+</template>
+
+<script>
+  import vHeader from '@/components/header/header'
+  import vAreamsg from '@/components/detailblock/areamsg'
+  import vMatingmap from '@/components/detailblock/matingmap'
+  import vVideo from '@/components/detailblock/videopublicity' 
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+
+      };
+    },
+
+    components: {
+        vHeader,
+        vAreamsg,
+        vMatingmap,
+        vVideo
+    },
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    html,body{
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .createGuestInfor{
+        width: 100%;
+        height: 100%;
+    }
+    .el-container{
+        height: 100%;
+    }
+    .guestContainer{
+        width: 100%;
+        height: 100%;
+        background: #eee;
+        overflow: hidden;
+    }
+    .guestDetail{
+        width: 960px;
+        /* height: 1000px; */
+        margin: 10px auto;
+        /* background: red; */
+    }
+    .createGuestDisplay{
+        width: 100%;
+        /* height: 685px; */
+        padding: 5px;
+        border: 1px solid #A3A5A7;
+        /* background-color: red; */
+        display: flex;
+    }
+    .createGuestRight{
+        width: 326px;
+        margin-left: 8px;
+    }
+   .createGuestRight .videoPublicity{
+       margin-top: 0;
+    }
+    .matingMap{
+        width: 100%;
+        height: 450px;
+        padding: 5px;
+        border: 1px solid #A3A5A7;
+        margin-top: 10px;
+    }
+
+
+    .el-scrollbar__wrap {
+        overflow-x: hidden;
+    }
+    .is-horizontal {
+        display: none;
+    }
+</style>

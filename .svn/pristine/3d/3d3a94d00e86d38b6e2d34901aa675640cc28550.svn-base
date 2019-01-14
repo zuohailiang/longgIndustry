@@ -1,0 +1,737 @@
+<template>
+  <div class="switchList">
+      <el-scrollbar style="height: 100%">
+        <div class="listContainer">
+            <div class="listHeader">
+            <table border="0">
+                <tr>
+                    <td>区&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;域：</td>
+                    <td>
+                        <el-radio-group v-model="area" @change="checkedElRadio1">
+                            <el-radio-button label="440307001,440307002,440307003,440307004,440307005,440307006,440307007,440307008">全部</el-radio-button>
+                            <el-radio-button label="440307001">平湖</el-radio-button>
+                            <el-radio-button label="440307002">布吉</el-radio-button>
+                            <el-radio-button label="440307003">坂田</el-radio-button>
+                            <el-radio-button label="440307004">南湾</el-radio-button>
+                            <el-radio-button label="440307005">横岗</el-radio-button>
+                            <el-radio-button label="440307006">龙岗</el-radio-button>
+                            <el-radio-button label="440307007">龙城</el-radio-button>
+                            <el-radio-button label="440307008">坪地</el-radio-button>
+                        </el-radio-group>
+                    </td>
+                </tr>
+                <tr>
+                    <td>租金单价：</td>
+                    <td v-if="selectOther === '可售产业用地'">
+                        <el-radio-group v-model="rental" @change="checkedElRadio2">
+                            <el-radio-button label=">=0">全部</el-radio-button>
+                            <el-radio-button label=">=0,<1000">1000以下</el-radio-button>
+                            <el-radio-button label=">=1000,<2000">1000-2000</el-radio-button>
+                            <el-radio-button label=">=2000,<3000">2000-3000</el-radio-button>
+                            <el-radio-button label=">=3000">3000以上</el-radio-button>
+                        </el-radio-group>
+                        <span class="unit">单位：元/m²</span>
+                    </td>
+                    <td v-else>
+                        <el-radio-group v-model="rental" @change="checkedElRadio2">
+                            <el-radio-button label=">=0">全部</el-radio-button>
+                            <el-radio-button label=">=0,<15">0-15</el-radio-button>
+                            <el-radio-button label=">=15,<30">15-30</el-radio-button>
+                            <el-radio-button label=">=30,<50">30-50</el-radio-button>
+                            <el-radio-button label=">=50,<100">50-100</el-radio-button>
+                            <el-radio-button label=">=100">100以上</el-radio-button>
+                        </el-radio-group>
+                        <span class="unit">单位：元/m²</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>面&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;积：</td>
+                    <td v-if="selectOther === '可售产业用地'">
+                        <el-radio-group v-model="square" @change="checkedElRadio3">
+                            <el-radio-button label=">=0">全部</el-radio-button>
+                            <el-radio-button label=">=0,<4000">4000以下</el-radio-button>
+                            <el-radio-button label=">=4000,6000">4000-6000</el-radio-button>
+                            <el-radio-button label=">=6000,<8000">6000-8000</el-radio-button>
+                            <el-radio-button label=">=8000">8000以上</el-radio-button>
+                        </el-radio-group>
+                        <span class="unit">单位：m²</span>
+                    </td>
+                    <td v-else>
+                        <el-radio-group v-model="square" @change="checkedElRadio3">
+                            <el-radio-button label=">=0">全部</el-radio-button>
+                            <el-radio-button label=">=0,<1000">0-1000</el-radio-button>
+                            <el-radio-button label=">=1000,<2000">1000-2000</el-radio-button>
+                            <el-radio-button label=">=2000,<3000">2000-3000</el-radio-button>
+                            <el-radio-button label=">=3000,<5000">3000-5000</el-radio-button>
+                            <el-radio-button label=">=5000">5000以上</el-radio-button>
+                        </el-radio-group>
+                        <span class="unit">单位：m²</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>其&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;他：</td>
+                    <td v-if="selectOther === '可售产业用地'">
+                        <el-radio-group v-model="other" @change="checkedElRadio4">
+                            <el-radio-button label="">全部</el-radio-button>
+                            <el-radio-button label="21">重点片区</el-radio-button>
+                            <el-radio-button label="22">其他片区</el-radio-button>
+                        </el-radio-group>
+                    </td>
+                    <td v-else>
+                        <el-radio-group v-model="other" @change="checkedElRadio4">
+                            <el-radio-button label="">全部</el-radio-button>
+                            <el-radio-button label="11">创新产业园</el-radio-button>
+                            <el-radio-button label="12">重点片区</el-radio-button>
+                        </el-radio-group>
+                    </td>
+                </tr>
+                <tr>
+                    <td>筛选条件：</td>
+                    <td>
+                        <el-tag
+                            v-for="s1 in screen1"
+                            :key="s1"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s1)">
+                            {{s1}}
+                        </el-tag>
+                        <el-tag
+                            v-for="s2 in screen2"
+                            :key="s2"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s2)">
+                            {{s2}}
+                        </el-tag>
+                        <el-tag
+                            v-for="s3 in screen3"
+                            :key="s3"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s3)">
+                            {{s3}}
+                        </el-tag>
+                        <el-tag
+                            v-for="s4 in screen4"
+                            :key="s4"
+                            closable
+                            :disable-transitions="false"
+                            size="small"
+                            @close="handleClose(s4)">
+                            {{s4}}
+                        </el-tag>
+                    </td>
+                </tr>
+            </table>
+            </div>
+            <div class="listContent">
+                <div class="listLeft">
+                    <div v-if="selectOther === '可租产业用房'">
+                        <el-radio-group v-model="allSentType" size="mini" @change="selectType">
+                            <el-radio-button label="%在租%,%待租%,%租完%">全部类型</el-radio-button>
+                            <el-radio-button label="%在租%">在租</el-radio-button>
+                            <el-radio-button label="%待租%">待租</el-radio-button>
+                            <el-radio-button label="%租完%">租完</el-radio-button>
+                        </el-radio-group>
+                    </div>
+                    <div v-if="selectOther === '可售产业用房'">
+                        <el-radio-group v-model="allSaleType" size="mini" @change="selectType">
+                            <el-radio-button label="%在售%,%待售%,%售完%">全部类型</el-radio-button>
+                            <el-radio-button label="%在售%">在售</el-radio-button>
+                            <el-radio-button label="%待售%">待售</el-radio-button>
+                            <el-radio-button label="%售完%">售完</el-radio-button>
+                        </el-radio-group>
+                    </div>
+                    <div class="sortAndPagenation">
+                        <el-radio-group v-model="sortType" @change="radioChange">
+                            <el-radio-button label="默认排序">
+                                
+                            </el-radio-button>
+                            <el-radio-button label="价格">
+                                <i class="el-icon-arrow-down">价格</i>
+                            </el-radio-button>
+                            <el-radio-button label="面积">
+                                <i class="el-icon-arrow-down">面积</i>
+                            </el-radio-button>
+                        </el-radio-group>
+                        <el-pagination
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            :current-page="currentPage"
+                            layout="total, prev, pager, next"
+                            :total="listValue.total">
+                        </el-pagination>
+                    </div>
+                    <div class="sortContent">
+                        <ul>
+                            <li v-for="(l,index) in listValue.list" :key="index">
+                                <div class="listImg">
+                                    <img src="" alt="">
+                                </div>
+                                <div class="listMsg">
+                                    <div v-if="l.ViewLand.bid">
+                                        <a href="javascript:void(0);" :landBid="l.ViewLand.bid" @click="skipLindDetail">{{l.ViewLand.names}}</a><span class="status">{{l.ViewLand.landstatus}}</span>
+                                    </div>
+                                    <div v-if="l.ViewLand.parkid">
+                                        <a href="javascript:void(0);" :parkid="l.ViewLand.parkid" @click="skipParkDetail">{{l.ViewLand.names}}</a><a href="javascript:void(0);" :buildid="l.ViewLand.buildid" @click="skipBuildDetail" class="secondA">{{l.ViewLand.bname}}</a><span class="sentState">【{{l.ViewLand.landstatus}}】</span>
+                                    </div>
+                                    <p><label>地址：</label><span>{{l.ViewLand.address}}</span></p>
+                                    <p><label>面积：</label><span>{{l.ViewLand.area}}㎡</span></p>
+                                    <p class="listPrice"><label>价格：</label><span>{{l.ViewLand.referenceprice}}元/㎡</span></p>
+                                    <p class="checkMap">查看地图<img src="../../../static/images/point4.png" alt=""></p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="listRight">
+                    <!-- <v-detaillist></v-detaillist>
+                    <v-detaillist></v-detaillist> -->
+                </div>
+            </div>
+        </div>
+      </el-scrollbar>
+  </div>
+</template>
+
+<script>
+  import vDetaillist from "@/components/detailblock/detaillist"
+  import { base_url } from '@/api/api.js'
+  import { publicRequirest } from '@/api/api.js'
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          iptName: '',
+          selectOther: '可售产业用地',
+          area: '440307001,440307002,440307003,440307004,440307005,440307006,440307007,440307008',
+          rental: '>=0',
+          square: '>=0',
+          other: '',
+          allSentType: '%在租%,%待租%,%租完%',
+          allSaleType: '%在售%,%待售%,%售完%',
+          sortType: '默认排序',
+          sort: 'modifydate-',
+          screen1: [],
+          screen2: [],
+          screen3: [],
+          screen4: [],
+          currentPage: 1,
+          listSelect: {
+              area: '',
+              rental: '',
+              square: '',
+              other: '', 
+              allSentType: '',
+              allSaleType: ''
+          },
+          listValue: ''
+      };
+    },
+
+    components: {
+        vDetaillist
+    },
+
+    computed: {},
+
+    created() {},
+
+    mounted() {
+        this.listSelect.area = this.area.split(",");
+        this.listSelect.rental = this.rental;
+        this.listSelect.square = this.square;
+        this.listSelect.other = this.other;
+        this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+        this.$root.Bus.$on("listenListSelectCon",(val)=> {
+            this.iptName = "";
+            this.sortType = '默认排序';
+            this.sort = 'modifydate-';
+            this.area = '440307001,440307002,440307003,440307004,440307005,440307006,440307007,440307008';
+            this.rental = '>=0';
+            this.square = '>=0';
+            this.other = '';
+            this.currentPage = 1;
+            this.selectOther = val.lsType;
+            this.listSelect.area = this.area.split(",");
+            if(val.lsType === "可售产业用地") {
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+            }
+            if(val.lsType === "可租产业用房") {
+                this.allSentType = '%在租%,%待租%,%租完%';
+                this.listSelect.allSentType = this.allSentType.split(",");
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,this.currentPage);
+            }
+            if(val.lsType === "可售产业用房") {
+                this.allSaleType = '%在售%,%待售%,%售完%';
+                this.listSelect.allSaleType = this.allSaleType.split(",");
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage);
+            }
+        })
+    },
+
+    methods: {
+        radioChange: function(label) {
+            if(label === "默认排序") {
+                this.sort = 'modifydate-';
+            }
+            if(label === "价格") {
+                this.sort = 'referencepricemin-,referencepricemax-';
+            }
+            if(label === "面积") {
+                this.sort = 'area-'
+            }
+            if(this.selectOther === "可售产业用地"){
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+            }
+            if(this.selectOther === "可租产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,this.currentPage)
+            }
+            if(this.selectOther === "可售产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage)
+            }
+        },
+        getSaleLandListInfor: function(name,jdcode,referenceprice,area,other,order,page) {    //获取可售产业用地列表
+            var jdco = '[';
+            for(var i=0;i<jdcode.length;i++) {
+                jdco += '"' + jdcode[i] + '"' + ",";
+            }
+            jdco = jdco.substring(0, jdco.lastIndexOf(','));
+            jdco += ']';
+            let str = ' "@column": "geometry,bid,introimg,area,jdname,names,address,landstatus,referenceprice,x,y",' +
+                      ' "landstatus$": ["待售","在售","已售"],' +
+                      ' "jdcode{}":' + jdco + ',' +
+                      ' "referencepricemin&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "referencepricemax&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "@combine": "referencepricemin&{},referencepricemax&{}",' +
+                      ' "area&{}":' + "\"" + area + "\"" + ',' +
+                      ' "@order":' + "\"" + order + "\"" + ',';
+            if(name !== ""){
+                // str += `"names$": ${name},`;
+                name = `%${name}%`;
+                str += '"names$":' + "\"" + name + "\"" + ','
+            }
+            if(other === "21") {
+                str += '"pccategory": 1,'
+            }
+            if(other === "22") {
+                str += '"pccategory": 0,'
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            publicRequirest.getSsListSaleLand(page,json).then(res=> {
+                console.log(res);
+                if(res.data.list && res.data.list.length>0){
+                    this.listValue = res.data;
+                }else{
+                    this.$message({
+                        message: '无该条件下数据！！！',
+                        type: 'warning'
+                    });
+                    this.listValue = "";
+                }
+            })
+        },
+        getSentHouseListInfor: function(name,jdcode,referenceprice,area,other,order,type,page) {   //获取可租可售产业用房数据
+            var jdco = '[';
+            for(var i=0;i<jdcode.length;i++) {
+                jdco += '"' + jdcode[i] + '"' + ",";
+            }
+            jdco = jdco.substring(0, jdco.lastIndexOf(','));
+            jdco += ']';
+            var status = '[';
+            for(var i=0;i<type.length;i++) {
+                status += '"' + type[i] + '"' + ",";
+            }
+            status = status.substring(0, status.lastIndexOf(','));
+            status += ']';
+            let str = ' "@column": "buildid,parkid,area,names,bname,address,landstatus,referenceprice,x,y",' +
+                      ' "landstatus$":' + status + ',' +
+                      ' "jdcode{}":' + jdco + ',' +
+                      ' "referencepricemin&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "referencepricemax&{}":' + "\"" + referenceprice + "\"" + ',' +
+                      ' "@combine": "referencepricemin&{},referencepricemax&{}",' +
+                      ' "area&{}":' + "\"" + area + "\"" + ',' +
+                      ' "@order":' + "\"" + order + "\"" + ',';
+            if(name !== ""){
+                // str += `"names$": ${name},`;
+                name = `%${name}%`;
+                str += '"names$":' + "\"" + name + "\"" + ','
+            }
+            if(other === "11") {
+                str += '"pkcategory": 1,'
+            }
+            if(other === "12") {
+                str += '"pccategory": 1,'
+            }
+            str = str.substring(0, str.lastIndexOf(','));
+            let dataJsonStr = `{${str}}`;
+            let json = JSON.parse(dataJsonStr);
+            if(this.selectOther === "可租产业用房") {
+                publicRequirest.getSsListSentHouse(page,json).then(res=> {
+                    let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    if(res.data.list && res.data.list.length>0) {
+                        res.data.list.forEach(element=> {
+                            let item = {
+                                ViewLand: ''
+                            }
+                            item.ViewLand = element.ViewRentalBuild;
+                            dataList.list.push(item);
+                        })
+                        this.listValue = dataList;
+                    }else{
+                        this.$message({
+                            message: '无该条件下数据！！！',
+                            type: 'warning'
+                        });
+                        this.listValue = "";
+                    }
+                })
+            }
+            if(this.selectOther === "可售产业用房") {
+                publicRequirest.getSsListSaleHouse(page,json).then(res=> {
+                    console.log(res);
+                    let dataList = {
+                        list: [],
+                        total: ''
+                    }
+                    dataList.total = res.data.total;
+                    if(res.data.list && res.data.list.length>0) {
+                        res.data.list.forEach(element=> {
+                            let item = {
+                                ViewLand: ''
+                            }
+                            item.ViewLand = element.ViewCellBuild;
+                            dataList.list.push(item);
+                        })
+                        this.listValue = dataList;
+                    }else{
+                        this.$message({
+                            message: '无该条件下数据！！！',
+                            type: 'warning'
+                        });
+                        this.listValue = "";
+                    }
+                })
+            }
+        },
+        checkedElRadio1: function(label) {    //区域
+            this.screen1 = [];
+            if(this.area !== "全部"){
+                this.screen1.push(this.area);
+            }
+            this.iptName = "";
+            this.sort = 'modifydate-';
+            this.currentPage = 1;
+            this.listSelect.area = label.split(',');
+            if(this.selectOther === "可售产业用地"){
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+            }
+            if(this.selectOther === "可租产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,this.currentPage)
+            }
+            if(this.selectOther === "可售产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage)
+            }
+        },
+        checkedElRadio2: function(label) {    //租金单价
+            this.screen2 = [];
+            if(this.rental !== "全部"){
+                this.screen2.push(this.rental);
+            }
+            this.iptName = "";
+            this.sort = 'modifydate-';
+            this.currentPage = 1;
+            this.listSelect.rental = label;
+            if(this.selectOther === "可售产业用地"){
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+            }
+            if(this.selectOther === "可租产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,this.currentPage)
+            }
+            if(this.selectOther === "可售产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage)
+            }
+        },
+        checkedElRadio3: function(label) {    //面积
+            this.screen3 = [];
+            if(this.square !== "全部"){
+                this.screen3.push(this.square);
+            }
+            this.iptName = "";
+            this.sort = 'modifydate-';
+            this.currentPage = 1;
+            this.listSelect.square = label;
+            if(this.selectOther === "可售产业用地"){
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+            }
+            if(this.selectOther === "可售产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage);
+            }
+        },
+        checkedElRadio4: function(label) {    //其他
+            this.screen4 = [];
+            if(this.other !== "全部"){
+                this.screen4.push(this.other);
+            }
+            this.iptName = "";
+            this.sort = 'modifydate-';
+            this.currentPage = 1;
+            this.listSelect.other = label;
+            if(this.selectOther === "可售产业用地"){
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.currentPage);
+            }
+            if(this.selectOther === "可租产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,this.currentPage);
+            }
+            if(this.selectOther === "可售产业用房"){
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage);
+            }
+        },
+        selectType: function(label) {   //选择类型
+            if(this.selectOther === "可租产业用房") {
+                this.listSelect.allSentType = label.split(",");
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,this.currentPage);
+            }
+            if(this.selectOther === "可售产业用房") {
+                this.listSelect.allSaleType = label.split(",");
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,this.currentPage);
+            }
+        },
+        handleClose: function(s){
+            if(s === "布吉" || s === "横岗" || s === "南湾" || s === "坂田" || s === "平湖" || s === "龙城" || s === "龙岗" || s === "坪地"){
+                this.screen1.splice(this.screen1.indexOf(s), 1);
+                this.area = "全部";
+            }
+            if(s === "0-15" || s === "15-30" || s === "30-50" || s === "50-100" || s === "100以上"){
+                this.screen2.splice(this.screen2.indexOf(s), 1);
+                this.rental = "全部";
+            }
+            if(s === "0-1000" || s === "1000-2000" || s === "2000-3000" || s === "3000-5000" || s === "5000以上"){
+                this.screen3.splice(this.screen3.indexOf(s), 1);
+                this.square = "全部";
+            }
+            if(s === "创兴产业园" || s === "重点片区"){
+                this.screen4.splice(this.screen4.indexOf(s), 1);
+                this.other = "全部";
+            }
+        },
+        handleSizeChange(val) {
+            console.log(`每页 ${val} 条`);
+        },
+        handleCurrentChange(val) {
+            if(this.selectOther === "可售产业用地") {
+                this.getSaleLandListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,val);
+            }
+            if(this.selectOther === "可租产业用房") {
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSentType,val);
+            }
+            if(this.selectOther === "可售产业用房") {
+                this.getSentHouseListInfor(this.iptName,this.listSelect.area,this.listSelect.rental,this.listSelect.square,this.listSelect.other,this.sort,this.listSelect.allSaleType,val);
+            }
+        },
+        skipLindDetail: function(event) {    //产业用地列表详情链接
+            let landBid = event.target.getAttribute("landBid");
+            let newpage = this.$router.resolve({   //新开一个窗口弹出页面
+                name: 'landdetails',
+                query:{
+                    bid: landBid
+                }   
+            })  
+            window.open(newpage.href, '_blank');
+        },
+        skipParkDetail: function(event) {    //产业用房园区详情链接
+            let parkid = event.target.getAttribute("parkid");
+            let newpage = this.$router.resolve({   //新开一个窗口弹出页面
+                name: 'useroomdetails',
+                query:{
+                    bid: parkid
+                }   
+            })  
+            window.open(newpage.href, '_blank');
+        },
+        skipBuildDetail: function(event) {    //跳转到楼栋详情链接
+            let buildid = event.target.getAttribute("buildid");
+            let newpage = this.$router.resolve({   //新开一个窗口弹出页面
+                name: 'buildingdetail',
+                query:{
+                    buildid: buildid
+                }   
+            })  
+            window.open(newpage.href, '_blank');
+        },
+    },
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .switchList{
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .listContainer {
+        width: 960px;
+        height: 1000px;
+        /* background: red; */
+        padding: 5px;
+        margin: 0 auto;
+    }
+    .listHeader{
+        width: 100%;
+        background: #99cc33;
+    }
+    .listHeader table{
+        width: 100%;
+    }
+    .listHeader table tr td{
+        padding: 4px 5px;
+        font-size: 16px;
+    }
+    .listHeader table tr td:first-child{
+        text-align: right;
+    }
+    .unit{
+        color: #fff;
+    }
+    .listHeader .el-radio-button:first-child .el-radio-button__inner,.listContent .el-radio-button:first-child .el-radio-button__inner {
+        border-left: none;
+    }
+    .listHeader .el-radio-button__inner,.listContent .el-radio-button__inner {
+        background: none;
+        border: none;
+        color: #000;
+    }
+    .listHeader .el-radio-button:first-child .el-radio-button__inner,.listContent .el-radio-button:first-child .el-radio-button__inner {
+        border-radius: 0;
+    }
+    .listHeader .el-radio-button:last-child .el-radio-button__inner,.listContent .el-radio-button:last-child .el-radio-button__inner {
+        border-radius: 0;
+    }
+    .listHeader .el-radio-button__orig-radio:checked+.el-radio-button__inner,.listContent .el-radio-button__orig-radio:checked+.el-radio-button__inner {
+        background: #ff7f00;
+        border-color: none; 
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    .listHeader .el-tag {
+        color: #000;
+        border-color: #000;
+    }
+    .listHeader .el-tag .el-icon-close {
+        color: #000;
+    }
+    .listHeader .el-tag--small .el-icon-close {
+        -webkit-transform: none;
+        transform: none;
+    }
+    .listContent {
+        width: 100%;
+        height: 800px;
+        /* background: red; */
+        margin-top: 10px;
+        display: flex;
+    }
+    .listLeft {
+        width: 648px;
+    }
+    .sortAndPagenation {
+        padding: 4px 0;
+        border-bottom: 1px dashed #000;
+    }
+    .listContent .el-icon-arrow-down:before {
+        content: "";
+    }
+    .listContent .el-icon-arrow-down:after {
+        content: "\E603";
+    }
+    .listContent .el-pagination {
+        width: 370px;
+        display: inline-block;
+        text-align: right;
+    }
+    .listContent .el-pager li {
+        min-width: 26px;
+    }
+
+    .sortContent{
+        width: 100%;
+        height: 800px;
+        /* background: red; */
+    }
+    .sortContent ul {
+        width: 100%;
+    }
+    .sortContent ul li {
+        width: 100%;
+        padding: 8px 0 0 0;
+        display: flex;
+        border-bottom: 1px dashed #000;
+    }
+    .listImg {
+        width: 20%;
+        height: 120px; 
+        background: red;
+    }
+    .listImg img {
+        width: 100%;
+        height: 100%;
+    }
+    .listMsg{
+        width: 80%;
+    }
+    .sortContent ul li a {
+        font-size: 18px;
+        text-decoration: underline;
+        margin-left: 10px;
+    }
+    .status {
+        background: #148DDA;
+        padding: 0 6px;
+        color: #fff;
+        margin-left: 10px;
+    }
+    .sortContent ul li p{
+        line-height: 1.8;
+        margin-left: 10px;
+        font-size: 16px;
+    }
+    .listPrice{
+        color: #ff6302;
+    }
+    .checkMap{
+        text-align: right;
+        cursor: pointer;
+    }
+    .checkMap img{
+        width: 32px;
+        height: 32px;
+        margin-bottom: 6px;
+    }
+
+    .listRight{
+        width: 300px;
+        margin-left: 10px; 
+    }
+
+    .el-scrollbar__wrap {
+        overflow-x: hidden;
+    }
+    .is-horizontal {
+        display: none;
+    }
+
+</style>

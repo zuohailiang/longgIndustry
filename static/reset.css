@@ -1,0 +1,15 @@
+@charset "utf-8";
+/* CSS Document */
+/*reset-css*/
+body{margin:0; font-size:12px; line-height:1; font-family:"微软雅黑";}
+h1,h2,h3,h4,h5,h6{ margin:0;font-weight:normal; font-size:12px;}
+p{margin:0;}
+ul,ol{margin:0;padding:0;list-style:none;}
+dl,dd{margin:0;}
+img{ vertical-align:middle;}
+b,strong{ font-weight:normal;}
+em,i{ font-style:normal;}
+a{text-decoration:none;}
+input{margin:0;padding:0;border:0;background:none;}
+.clearfix:after{content:""; display:block; clear:both;}
+

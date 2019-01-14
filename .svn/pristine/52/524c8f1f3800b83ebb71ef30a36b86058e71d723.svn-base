@@ -1,0 +1,96 @@
+<template>
+  <!-- 宣传视频 -->
+  <div class="videoPublicity">
+      <h3>龙岗宣传视频</h3>
+      <div class="videoContainer">
+        <video-player  class="video-player vjs-custom-skin"
+            ref="videoPlayer"
+            :playsinline="true"
+            :options="playerOptions">
+        </video-player>
+      </div>     
+  </div>
+</template>
+
+<script>
+
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+          playerOptions : {
+            playbackRates: [0.7, 1.0, 1.5, 2.0], //播放速度
+            autoplay: false, //如果true,浏览器准备好时开始回放。
+            muted: false, // 默认情况下将会消除任何音频。
+            loop: false, // 导致视频一结束就重新开始。
+            preload: 'auto', // 建议浏览器在<video>加载元素后是否应该开始下载视频数据。auto浏览器选择最佳行为,立即开始加载视频（如果浏览器支持）
+            language: 'zh-CN',
+            //aspectRatio: '', // 将播放器置于流畅模式，并在计算播放器的动态大小时使用该值。值应该代表一个比例 - 用冒号分隔的两个数字（例如"16:9"或"4:3"）
+            fluid: true, // 当true时，Video.js player将拥有流体大小。换句话说，它将按比例缩放以适应其容器。
+            sources: [{
+                type: "",
+                src: "../../../static/longg.mp4" //url地址
+            }],
+            poster: "", //你的封面地址
+            // width: document.documentElement.clientWidth,
+            notSupportedMessage: '此视频暂无法播放，请稍后再试', //允许覆盖Video.js无法播放媒体源时显示的默认信息。
+            controlBar: {
+                timeDivider: true,
+                durationDisplay: true,
+                remainingTimeDisplay: false,
+                fullscreenToggle: true  //全屏按钮
+            }
+        }
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    .videoPublicity {
+        width: 100%;
+        height: 289px;
+        /* background: red; */
+        margin-top: 10px;
+        border: 1px solid #A3A5A7;
+        box-sizing: border-box;                                
+    }
+    .videoPublicity h3{
+        padding: 6px 0;
+        text-indent: 5px;
+        font-size: 16px;
+        color: #fff;
+        background: #99cc33;
+    }
+    .videoContainer {
+        width: 100%;
+        height: 100%;
+    }
+    .videoContainer video {
+        width: 100%;
+        height: 60px;
+    }
+    .vjs-custom-skin > .video-js {
+        height: 259px;
+    }
+    .video-js .vjs-tech {
+        height: 100%;
+    }
+    .video-js{
+        padding-top: 0 !important;
+    }
+</style>

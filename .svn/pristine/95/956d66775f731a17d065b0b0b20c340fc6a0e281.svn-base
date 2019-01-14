@@ -1,0 +1,51 @@
+<template>
+  <div>
+    <div class="areaName">
+        <h3>产业用房</h3>
+        <el-checkbox v-model="checked3" label="创新产业园" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="其他园区" border size="mini"></el-checkbox>
+    </div>
+    <div class="areaName">
+        <h3>区位</h3>
+        <el-checkbox v-model="checked3" label="南湾" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="平湖" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="横岗" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="龙城" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="坪地" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="布吉" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="龙岗" border size="mini"></el-checkbox>
+        <el-checkbox v-model="checked4" label="坂田" border size="mini"></el-checkbox>
+    </div>
+  </div>
+</template>
+
+<script>
+
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+        checked3: true,
+        checked4: true
+      };
+    },
+
+    components: {},
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+
+</style>

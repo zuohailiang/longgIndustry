@@ -1,0 +1,124 @@
+<template>
+  <!-- 企业详情 -->
+  <div class="enterpriseDetail">
+     <el-container>
+        <el-header>
+            <v-header></v-header>
+        </el-header>
+        <el-container>
+            <div class="enterpriseContainer">
+                <el-scrollbar style="height: 100%">
+                    <div class="enterDetail">
+                        <div class="enterpriseDisplay">
+                            <div class="enterpriseDisplayLeft">
+                                <div>
+                                    <v-thumbnail></v-thumbnail>
+                                </div>
+                            </div>
+                            <div class="enterpriseDisplayRight">
+                                <div>
+                                    <v-areamsg></v-areamsg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="matingMap">
+                            <v-matingmap></v-matingmap>
+                        </div>
+                    </div>
+                </el-scrollbar>
+            </div>
+        </el-container>
+    </el-container>
+  </div>
+</template>
+
+<script>
+  import vHeader from '@/components/header/header'
+  import vThumbnail from '@/components/detailblock/thumbnail'
+  import vAreamsg from '@/components/detailblock/areamsg'
+  import vMatingmap from '@/components/detailblock/matingmap'
+  export default {
+    name:'',
+    props:[''],
+    data () {
+      return {
+
+      };
+    },
+
+    components: {
+        vHeader,
+        vThumbnail,
+        vAreamsg,
+        vMatingmap
+    },
+
+    computed: {},
+
+    created() {},
+
+    mounted() {},
+
+    methods: {},
+
+    watch: {}
+
+  }
+
+</script>
+<style lang=''>
+    html,body{
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .enterpriseDetail{
+        width: 100%;
+        height: 100%;
+    }
+    .el-container{
+        height: 100%;
+    }
+    .enterpriseContainer{
+        width: 100%;
+        height: 100%;
+        background: #eee;
+        overflow: hidden;
+    }
+    .enterDetail{
+        width: 960px;
+        /* height: 1000px; */
+        margin: 10px auto;
+        /* background: red; */
+    }
+    .enterpriseDisplay{
+        width: 100%;
+        /* height: 685px; */
+        padding: 5px;
+        border: 1px solid #A3A5A7;
+        /* background-color: red; */
+        display: flex;
+    }
+    .enterpriseDisplay .thumbnail {
+        margin-top: 0;
+    }
+    .enterpriseDisplayRight{
+        width: 326px;
+        margin-left: 8px;
+    }
+    .matingMap{
+        width: 100%;
+        height: 450px;
+        padding: 5px;
+        border: 1px solid #A3A5A7;
+        margin-top: 10px;
+    }
+
+
+    .el-scrollbar__wrap {
+        overflow-x: hidden;
+    }
+    .is-horizontal {
+        display: none;
+    }
+</style>

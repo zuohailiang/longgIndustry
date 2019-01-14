@@ -1,0 +1,678 @@
+<template>
+    <div class="map-container">
+        <div id="map">
+    
+        </div>
+        <v-mapbutton @listenToMapLayer="getMapLayer"></v-mapbutton>
+        <v-selectarea v-if="isSelectArea" :selectShow='landHouse' :houseGarden="industrailHome" :keyAreaShow='keyAreaType' :industrailSelect="selectForm" @listenKeySelectValue="getKeySelectValue" @listenSelectValue="getSelectValue" @listenSelectParkValue="getSelectParkValue"></v-selectarea>
+        <v-enterprisemsg v-if="searchConditions" @listenToConditions="getSearchCondition" :enter-searchvalue="enterPriseValue" :input-value='iptValues'></v-enterprisemsg>
+        <div id="popup" class="ol-popup">
+          <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+          <component :is="currentPopup" :popup-properties="properties"></component> 
+        </div>
+        <!-- 地图右键菜单 -->
+        <div id="contextmenu_container" class="contextmenu">
+            <ul>
+                <li @click="checkCurrentArea">查看当前位置片区</li>
+                <li>查看当前位置园区</li>
+            </ul>
+        </div>
+    </div>
+</template>
+
+<script>
+  import vKeyAreapop from '../mappopup/keyareapop'  //重点片区地图弹窗
+  import vLandpop from '../mappopup/landpop'   //产业用地地图弹窗
+  import vHousepop from '../mappopup/housepop'   //产业用房地图弹窗/创新产业园地图弹窗
+  import vGuestparkpop from '../mappopup/guestparkpop'  //创客园区地图弹窗
+  import vIndustrialparkpop from '../mappopup/industryparkpop'  //工业区信息地图弹窗
+  import vEnterprisemsgpop from '../mappopup/interprisemsgpop'  //企业信息地图弹窗
+  import vMapbutton from '@/components/selectarea/maplayertype'  //地图卫星切换按钮
+  import vSelectarea from '@/components/selectarea/selectarea'
+  import vEnterprisemsg from '@/components/enterprisemsg/enterprisemsg'
+  import { initMap } from '@/utils/publicMap.js'
+  import { LoadMap } from '@/ol/zondy/openlayer_map_ol3_sz.js'
+  import { styleKeyArea, styleKeyAreaSelect, defaultStyles, selectStyles, industrailStyles, pointMoveStyles, pointSelectStyle, InpointMoveStyles, pointInSelectStyle } from '@/ol/zondy/openLayer_theme_ol3.js'
+  import { publicRequirest } from '@/api/api.js'
+  import { formatChange } from '@/utils/utils.js'
+  import Overlay from 'ol/overlay'
+  import extent from 'ol/extent'
+  import { deepClone } from '@/utils/utils.js'
+  import qs from 'qs' 
+  export default {
+    name:'',
+    props:['barmapPath'],
+    data () {
+      return {
+        keyAreaType: false,
+        isSelectArea: false,
+        landHouse: false,
+        industrailHome: false,
+        selectForm: false,
+        searchConditions: false,
+        mapViewExtent: '',
+        viewExtent: '',   //当前地图范围
+        popOverLay: '',
+        doubleClickSelect: '',
+        singeClickSelect: '',  
+        singeInClickSelect: '',
+        currentPopup: '',   //当前地图弹窗组件
+        properties: '',
+        keyAreaObj: '',  //所选片区类型
+        selectAreaObj: '',  //所选产业用房和区位
+        selectAreaStyleObj: '',  //所选行政区划和改造方式
+        importantArea: '',  //重点片区矢量图层
+        currentPosArea: '',  //查看当前位置片区添加一个矢量图层
+        indutrialLand: null,  //产业用地矢量图层
+        indutrialHouse: null, //产业用房矢量图层
+        innovatIndustrialPark: null, //创新产业园矢量图层
+        guestPark: null,  //创客园区矢量图层
+        industrailPark: null,  //工业区信息矢量图层
+        enterpriseMsg: null,  //企业信息矢量图层
+        landData: '',   //点数据
+        areaData: '',  //点击当前片区面数据
+        menu_overlay: '',
+        coordinateMap: '',  //地图右键时的坐标
+        enterParams: {
+            names: '',
+            page: 1,
+            count: 100000
+        },
+        enterPriseValue: '',
+        iptValues: ''
+      };
+    },
+
+    components: {
+        vKeyAreapop,
+        vLandpop,
+        vHousepop,
+        vGuestparkpop,
+        vIndustrialparkpop,
+        vEnterprisemsgpop,
+        vMapbutton,
+        vSelectarea,
+        vEnterprisemsg
+    },
+
+    computed: {},
+
+    created() {
+        
+    },
+
+    mounted() {
+        let _this = this;
+
+        initMap("map");  //初始化地图
+
+        this.viewExtent = window.openlayerMap.getViewExtentWkt();  //获取当前地图范围
+
+        this.importantArea = window.openlayerMap.addVectorLayer('重点片区',styleKeyArea,12,false);  //重点片区矢量图层
+        this.currentPosArea = window.openlayerMap.addVectorLayer('当前片区',styleKeyArea,12,false);  //当前片区矢量图层
+        this.indutrialLand = window.openlayerMap.addVectorLayer('用地',defaultStyles['PointLand1'],12,false);  //产业用地矢量图层
+        this.indutrialHouse = window.openlayerMap.addVectorLayer('用房',defaultStyles['PointHouse1'],12,false);  //产业用房矢量图层
+        this.innovatIndustrialPark = window.openlayerMap.addVectorLayer('创新产业园',defaultStyles['PointHouse1'],12,false);  //创新产业园矢量图层
+        this.guestPark = window.openlayerMap.addVectorLayer('创客园区',defaultStyles['PointHouse1'],12,false); //创客园区矢量图层
+        this.industrailPark =  window.openlayerMap.addVectorLayer('工业区',industrailStyles,12,false);  //工业区信息矢量图层
+        this.enterpriseMsg = window.openlayerMap.addVectorLayer('企业',defaultStyles['EnterpriseMsg'],12,false);  //企业信息矢量图层
+
+        this.doubleClickSelect = window.openlayerMap.initSelect('doubleclick',[this.importantArea,this.currentPosArea],styleKeyAreaSelect,selectFeatureFun);
+        // this.doubleClickCurrent = window.openlayerMap.initSelect('doubleclick',[this.currentPosArea],styleKeyAreaSelect,selectFeatureFun);
+        this.singeClickSelect = window.openlayerMap.initSelect('singleclick',[this.indutrialLand,this.indutrialHouse,this.innovatIndustrialPark,this.guestPark,this.enterpriseMsg],pointSelectStyle,selectFeatureFun);
+        this.singeInClickSelect = window.openlayerMap.initSelect('click',[this.industrailPark],pointInSelectStyle,selectFeatureFun);
+
+        let pointermoveSelect = window.openlayerMap.initSelect("pointermove",[this.indutrialLand,this.indutrialHouse,this.innovatIndustrialPark,this.guestPark,this.enterpriseMsg],pointMoveStyles,"");
+        window.openlayerMap.initSelect("pointermove",[this.industrailPark],InpointMoveStyles,"");
+        this.initPopup();
+
+        window.openlayerMap.changeLayerVisible("规划",false);
+        window.openlayerMap.changeLayerVector('');
+
+        this.contextmenuEvent();  //地图右键菜单事件
+
+        this.$root.Bus.$on('searchCoditionFirst',(val)=> {   //主页头部第一个搜索
+            this.isSelectArea = false;
+            this.keyAreaType = false;
+            this.landHouse = false;
+            this.industrailHome = false;
+            this.selectForm = false;
+            this.searchConditions = false;
+            let searchVal = `%${val.iptName}%`;
+            if(val.sName === "1") {   //选择为产业用地时
+                publicRequirest.getSearchByFieldLand(searchVal).then(res=> {
+                    this.landData = formatChange(res.data.list);
+                    window.openlayerMap.changeLayerVector('用地');
+                    window.openlayerMap.drawGraphicNoZoom('point',this.indutrialLand,this.landData);
+                })
+                this.currentPopup = 'vLandpop'; 
+            }
+            if(val.sName === "2") {    
+                publicRequirest.getSearchByFieldPark(searchVal).then(res=> {
+                    this.landData = formatChange(res.data.list);
+                    window.openlayerMap.changeLayerVector('用房');
+                    window.openlayerMap.drawGraphicNoZoom('point',this.indutrialHouse,this.landData);
+                })
+                this.currentPopup = 'vHousepop'; 
+            }
+            if(val.sName === "3") {
+                this.searchConditions = true;
+                this.enterParams.names = val.iptName;
+                this.getEnterpriseMsgMarksInfor(this.enterParams);
+                this.currentPopup = 'vEnterprisemsgpop';
+                publicRequirest.getEnterpriseMsgMarks({names:val.iptName,page:1,count:20}).then(res=> {
+                    setTimeout(()=> {
+                        this.enterPriseValue = res.data;
+                        this.iptValues = val.iptName;
+                        if(this.enterPriseValue.Rows.length === 0) {
+                            this.$message({
+                                message: '无该条件下数据！！！',
+                                type: 'warning',
+                                duration: 2000
+                            });
+                        }
+                    },500)
+                })
+            }
+        })
+
+        function selectFeatureFun(argument) {
+            if (argument.target.getFeatures().getLength() > 0) {
+                // 获取选择的要素对象
+                var selectFeature = argument.target.getFeatures().getArray()[0];
+                // var selectLayer = select.getLayer(selectFeature);
+                var selectLayer = window.openlayerMap.getLayerByFeature(selectFeature);
+                // 获取选择要素的属性集
+                _this.properties = selectFeature.getProperties();  
+                _this.popOverLay.setPosition(extent.getCenter(selectFeature.getGeometry().getExtent()));
+                // window.openlayerMap.setCenterAndZoom(extent.getCenter(selectFeature.getGeometry().getExtent()),8);
+            }
+        }
+    },
+
+    methods: {
+        contextmenuEvent: function() {
+            let _this = this;
+            //地图右键菜单事件
+            this.menu_overlay = new Overlay({
+                element: document.getElementById("contextmenu_container"),
+                positioning: 'left-top'
+            });
+            this.menu_overlay.setMap(map);
+            $(map.getViewport()).on("contextmenu", function(event){
+                event.preventDefault();//屏蔽自带的右键事件
+                let coordinate = map.getEventCoordinate(event);  //取得当前点的坐标
+                _this.coordinateMap = coordinate;
+                _this.menu_overlay.setPosition(coordinate);
+            });
+            $(map.getViewport()).on("click",function(event){
+                _this.menu_overlay.setPosition(undefined);
+            })
+        },
+        checkCurrentArea: function() {    //右键地图选择当前片区位置
+            let currentPoint = `POINT(${this.coordinateMap[0]} ${this.coordinateMap[1]})`;
+            let this_ = this;
+            this_.doubleClickSelect.featureOverlay_.getSource().clear();
+            publicRequirest.getCurrentArea(currentPoint).then(res => {
+                console.log(res);
+                let seData = {
+                    polyGeoJson: {
+                        features: [],
+                        type: "FeatureCollection"
+                    }
+                };
+                if(!res.data.list) {
+                    return false;
+                }
+                res.data.list.forEach(element => {
+                    let sItem = {};
+                    sItem.bid = element.ViewPiece.bid;
+                    sItem.geometry = element.ViewPiece.geometrypoly;
+                    sItem.names = element.ViewPiece.names;
+                    sItem.inf = element.ViewPiece.inf;
+                    sItem.geometrypoly = element.ViewPiece.geometrypoly;
+                    sItem.startlevel = element.ViewPiece.startlevel;
+                    seData.polyGeoJson.features.push(sItem);
+                });
+                this.areaData = seData;
+                this.$nextTick(() => {
+                    window.openlayerMap.changeLayerVisible("当前片区",true);
+                    window.openlayerMap.drawGraphicNoZoom(null,this_.currentPosArea,this.areaData);
+                    let selectAreaFeature = this_.currentPosArea.getSource().getFeatures()[0];
+                    this.doubleClickSelect.featureOverlay_.getSource().addFeature(selectAreaFeature);
+                    this.doubleClickSelect.dispatchEvent('select');
+                })
+            })
+            this.menu_overlay.setPosition(undefined);   //隐藏右键菜单
+            this.currentPopup = 'vKeyAreapop';
+        },
+        getKeySelectValue: function(data) {
+            this.keyAreaObj = deepClone(data);
+        },
+        getSelectValue: function(data) {
+            this.selectAreaObj = deepClone(data);
+        },
+        getSelectParkValue: function(data) {
+            this.selectAreaStyleObj = deepClone(data);
+        },
+        getSearchCondition: function(data) {   //获取企业信息筛选条件
+            this.getEnterpriseMsgMarksInfor(data);
+        },
+        getEnterpriseMsgMarksInfor: function(params) {  //企业信息地图点数据
+            this.$nextTick(()=> {
+                publicRequirest.getEnterpriseMsgMarks(params).then(res => {
+                    console.log(res);
+                    let obj = res.data.Rows;
+                    let data = {
+                        pointGeoJson: {
+                            features: [],
+                            type: "FeatureCollection"
+                        }
+                    }
+                    if(obj instanceof Array){
+                        obj.forEach((val,index,arr) => {
+                            if(val.geometrypoint) {
+                                val.dataType = "ViewEnterprise";
+                                data.pointGeoJson.features.push(val);
+                            }
+                        })
+                        let stringData = JSON.stringify(data);
+                        let jsonData = JSON.parse(stringData);
+                        this.landData = jsonData;
+                    }
+                    window.openlayerMap.changeLayerVector('企业');
+                    window.openlayerMap.drawGraphicNoZoom_1('point',this.enterpriseMsg,this.landData);
+                })
+            })
+        },
+        initPopup: function() {
+            let this_ = this;
+            let popContainer = document.getElementById('popup');
+            let popContent = document.getElementById('popup-content');
+            let popCloser = document.getElementById('popup-closer');
+            if (this.popOverLay) {
+                window.map.removeOverlay(this.popOverLay);
+            }
+            this.popOverLay = new Overlay({
+                id: 'popupInfo',
+                element: popContainer,
+                autoPan: true,
+                autoPanAnimation: {
+                    duration: 250
+                }
+            });
+            window.map.addOverlay(this.popOverLay);
+            popCloser.onclick = function() {
+                this_.currentPosArea.getSource().clear();
+                this_.doubleClickSelect.featureOverlay_.getSource().clear();
+                this_.singeClickSelect.featureOverlay_.getSource().clear();
+                this_.singeInClickSelect.featureOverlay_.getSource().clear();
+                this_.popOverLay.setPosition(undefined);
+                popCloser.blur();
+                return false;
+            };
+        },
+        //切换地图类型
+        getMapLayer: function(val) {
+            if(val === "卫星") {
+                LoadMap.changeDefaultBaseLayer_evt("avi");
+            }
+            if(val === "地图") {
+                LoadMap.changeDefaultBaseLayer_evt("image");
+            }
+        }
+    },
+
+    watch: {
+        barmapPath(newVal,oldVal){
+            let _this = this;
+            this.barmapPath = newVal;
+            this.isSelectArea = false;
+            this.keyAreaType = false;
+            this.landHouse = false;
+            this.industrailHome = false;
+            this.selectForm = false;
+            this.searchConditions = false;
+            this.keyAreaObj = '';  //将片区类型里的参数置空
+            this.selectAreaObj = '';  //将载体信息里面的请求参数置空
+            this.selectAreaStyleObj = '';   //先将工业区信息请求参数置空
+            this.doubleClickSelect.featureOverlay_.getSource().clear();
+            this.singeClickSelect.featureOverlay_.getSource().clear();
+            this.singeInClickSelect.featureOverlay_.getSource().clear();
+            if(this.barmapPath === "key_area") {   //重点片区
+                this.isSelectArea = true;
+                this.keyAreaType = true;
+                this.$nextTick(() => {
+                    publicRequirest.getImportKeyArea(this.keyAreaObj,this.viewExtent).then(function(res) {
+                        let seData = {
+                            polyGeoJson: {
+                                features: [],
+                                type: "FeatureCollection"
+                            }
+                        };
+                        res.data.list.forEach(element => {
+                            let sItem = {};
+                            sItem.bid = element.ViewPiece.bid;
+                            sItem.geometry = element.ViewPiece.geometrypoly;
+                            sItem.names = element.ViewPiece.names;
+                            sItem.inf = element.ViewPiece.inf;
+                            sItem.geometrypoly = element.ViewPiece.geometrypoly;
+                            sItem.startlevel = element.ViewPiece.startlevel;
+                            seData.polyGeoJson.features.push(sItem);
+                        });
+                        _this.landData = seData;
+                        window.openlayerMap.changeLayerVector('重点片区');
+                        window.openlayerMap.drawGraphicNoZoom(null,_this.importantArea,_this.landData);
+                    })
+                });
+                this.currentPopup = 'vKeyAreapop';
+            }
+            if(this.barmapPath === "industrial_land_1") {   //产业用地1
+                this.isSelectArea = true;
+                this.landHouse = true;
+                this.initPopup();
+                this.$nextTick(() => {
+                    publicRequirest.getIndustrialLand(1,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  
+                        _this.landData = formatChange(res.data.list);
+                        console.log(_this.landData);
+                        window.openlayerMap.changeLayerVector('用地');
+                        window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialLand,_this.landData);
+                    }) 
+                })
+                this.currentPopup = 'vLandpop'; 
+            }
+            if(this.barmapPath === "industrial_land_2") {  //产业用地2
+                this.isSelectArea = true;
+                this.landHouse = true;
+                this.initPopup();
+                this.$nextTick(() => {
+                    publicRequirest.getIndustrialLand(0,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  
+                        _this.landData = formatChange(res.data.list);
+                        window.openlayerMap.changeLayerVector('用地');
+                        window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialLand,_this.landData);
+                    })
+                }) 
+                this.currentPopup = 'vLandpop';  
+            }
+            if(this.barmapPath === "industrial_house_1") {   //产业用房1
+                this.isSelectArea = true;
+                this.landHouse = true;
+                this.industrailHome = true;
+                this.initPopup();
+                this.$nextTick(() => {
+                    publicRequirest.getIndustrialHouse(1,this.selectAreaObj.pkcategory,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  //产业用房1
+                        _this.landData = formatChange(res.data.list);
+                        window.openlayerMap.changeLayerVector('用房');
+                        window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialHouse,_this.landData);
+                    })
+                })
+                this.currentPopup = 'vHousepop'; 
+            }
+            if(this.barmapPath === "industrial_house_2") {   //产业用房2
+                this.isSelectArea = true;
+                this.landHouse = true;
+                this.industrailHome = true;
+                this.initPopup();
+                this.$nextTick(() => {
+                    publicRequirest.getIndustrialHouse(0,this.selectAreaObj.pkcategory,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  //产业用房2
+                        _this.landData = formatChange(res.data.list);
+                        window.openlayerMap.changeLayerVector('用房');
+                        window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialHouse,_this.landData);
+                    }) 
+                })
+                this.currentPopup = 'vHousepop'; 
+            }
+            if(this.barmapPath === "innovative_industrial_park") {   //创新产业园
+                this.isSelectArea = true;
+                this.landHouse = true;
+                this.initPopup();
+                const loading = this.$loading({
+                    lock: true,
+                    text: '数据加载中,请稍后！！！',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                this.$nextTick(() => {
+                    publicRequirest.getInnovativeIndustrialPark(this.selectAreaObj.jdcode,this.viewExtent).then(function(res){
+                        if(res.data.code === 200) {
+                            loading.close();
+                            _this.landData = formatChange(res.data.list);
+                            window.openlayerMap.changeLayerVector('创新产业园');
+                            window.openlayerMap.drawGraphicNoZoom('point',_this.innovatIndustrialPark,_this.landData);
+                        }
+                    })
+                })
+                this.currentPopup = 'vHousepop';
+            }
+            if(this.barmapPath === "guest_park") {  //创客园区
+                this.isSelectArea = true;
+                this.landHouse = true;
+                this.initPopup();
+                this.$nextTick(() => {
+                    publicRequirest.getGuestParkMark(this.selectAreaObj.jdcode,this.viewExtent).then(function(res){
+                        _this.landData = formatChange(res.data.list);
+                        window.openlayerMap.changeLayerVector('创客园区');
+                        window.openlayerMap.drawGraphicNoZoom('point',_this.guestPark,_this.landData);
+                    })
+                })
+                this.currentPopup = 'vGuestparkpop';
+            }
+            if(this.barmapPath === "industrial_park") {  //工业区信息
+                this.isSelectArea = true;
+                this.selectForm = true;
+                this.initPopup();
+                this.$nextTick(() => {
+                    const loading = this.$loading({
+                        lock: true,
+                        text: '数据加载中,请稍后！！！',
+                        spinner: 'el-icon-loading',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    });
+                    publicRequirest.getIndustrailParkMark(this.selectAreaStyleObj.jdcode,this.selectAreaStyleObj.transformway,this.viewExtent).then(function(res){
+                        if(res.data.code === 200) {
+                            loading.close();
+                            _this.landData = formatChange(res.data.list);
+                            window.openlayerMap.changeLayerVector('工业区');
+                            window.openlayerMap.drawGraphicNoZoom_1('point',_this.industrailPark,_this.landData);
+                        }
+                    })
+                })
+                this.currentPopup = 'vIndustrialparkpop';
+            }
+            if(this.barmapPath === "enterprise_msg") {  //企业信息
+                this.searchConditions = true;
+                this.iptValues = "";
+                this.initPopup();
+                this.enterParams.names = "";
+                this.getEnterpriseMsgMarksInfor(this.enterParams);
+                this.currentPopup = 'vEnterprisemsgpop';
+            }
+        },
+        keyAreaObj: {
+            deep: true,
+            handler: function(newVal,oldVal) {
+                let _this = this;
+                this.doubleClickSelect.featureOverlay_.getSource().clear();
+                this.singeClickSelect.featureOverlay_.getSource().clear();
+                this.singeInClickSelect.featureOverlay_.getSource().clear();
+                if(oldVal !== "") {
+                    if(this.barmapPath === "key_area") {
+                        this.$nextTick(() => {
+                            publicRequirest.getImportKeyArea(this.keyAreaObj,this.viewExtent).then(function(res) {
+                                let seData = {
+                                    polyGeoJson: {
+                                        features: [],
+                                        type: "FeatureCollection"
+                                    }
+                                };
+                                res.data.list.forEach(element => {
+                                    let sItem = {};
+                                    sItem.bid = element.ViewPiece.bid;
+                                    sItem.geometry = element.ViewPiece.geometrypoly;
+                                    sItem.startlevel = element.ViewPiece.startlevel;
+                                    seData.polyGeoJson.features.push(sItem);
+                                });
+                                _this.landData = seData;
+                                window.openlayerMap.drawGraphicNoZoom(null,_this.importantArea,_this.landData);
+                            })
+                        })
+                    }
+                }
+            }
+        },
+        selectAreaObj: {
+            deep: true,
+            handler: function(newVal,oldVal) {
+                let _this = this;
+                this.doubleClickSelect.featureOverlay_.getSource().clear();
+                this.singeClickSelect.featureOverlay_.getSource().clear();
+                this.singeInClickSelect.featureOverlay_.getSource().clear();
+                if(oldVal !== "") {
+                    if(this.barmapPath === "industrial_land_1") {
+                        this.$nextTick(() => {
+                            publicRequirest.getIndustrialLand(1,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  //产业用地1
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialLand,_this.landData);
+                            }) 
+                        })
+                    }
+                    if(this.barmapPath === "industrial_land_2") {
+                        this.$nextTick(() => {
+                            publicRequirest.getIndustrialLand(0,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  //产业用地2
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialLand,_this.landData);
+                            })
+                        })
+                    }
+                    if(this.barmapPath === "industrial_house_1") {   //产业用房1
+                        this.$nextTick(() => {
+                            publicRequirest.getIndustrialHouse(1,this.selectAreaObj.pkcategory,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  //产业用房1
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialHouse,_this.landData);
+                            })
+                        })
+                    }
+                    if(this.barmapPath === "industrial_house_2") {   //产业用房2
+                        this.$nextTick(() => {
+                            publicRequirest.getIndustrialHouse(0,this.selectAreaObj.pkcategory,this.selectAreaObj.jdcode,this.viewExtent).then(function(res){  //产业用房2
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.drawGraphicNoZoom('point',_this.indutrialHouse,_this.landData);
+                            }) 
+                        })
+                    }
+                    if(this.barmapPath === "innovative_industrial_park") {   //创新产业园
+                        this.$nextTick(() => {
+                            publicRequirest.getInnovativeIndustrialPark(this.selectAreaObj.jdcode,this.viewExtent).then(function(res){
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.drawGraphicNoZoom('point',_this.innovatIndustrialPark,_this.landData);
+                            })
+                        })
+                    }
+                    if(this.barmapPath === "guest_park") {  //创客园区
+                        this.$nextTick(() => {
+                            publicRequirest.getGuestParkMark(this.selectAreaObj.jdcode,this.viewExtent).then(function(res){
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.drawGraphicNoZoom('point',_this.guestPark,_this.landData);
+                            })
+                        })
+                    }
+                }
+            }
+        },
+        selectAreaStyleObj: {
+            deep: true,
+            handler: function(newVal,oldVal) {
+                this.doubleClickSelect.featureOverlay_.getSource().clear();
+                this.singeClickSelect.featureOverlay_.getSource().clear();
+                this.singeInClickSelect.featureOverlay_.getSource().clear();
+                if(oldVal !== ""){
+                    let _this = this;
+                    if(this.barmapPath === "industrial_park") {
+                        this.$nextTick(() => {
+                            publicRequirest.getIndustrailParkMark(this.selectAreaStyleObj.jdcode,this.selectAreaStyleObj.transformway,this.viewExtent).then(function(res){
+                                _this.landData = formatChange(res.data.list);
+                                window.openlayerMap.changeLayerVector('工业区');
+                                window.openlayerMap.drawGraphicNoZoom_1('point',_this.industrailPark,_this.landData);
+                            })
+                        })
+                    }
+                }
+            }
+        }
+    }
+  }
+</script>
+<style lang=''>
+    .map-container{
+         width: 100%;
+        height: 100%;
+    }
+    #map{
+        width: 100%;
+        height: 100%;
+        /* background: red; */
+    }
+    .contextmenu{
+        width: 140px;
+        height: 48px;
+        border: 1px solid #003466;
+        background: #fff;
+    }
+    .contextmenu ul li{
+        width: 100%;
+        height: 24px;
+        line-height: 24px;
+        font-size: 14px;
+    }
+    .contextmenu ul li:hover {
+        background: #7DBAF4;
+        color: #fff;
+    }
+    .map-container .ol-popup {
+        position: absolute;
+        background-color: #ffffff;
+        /* background: red; */
+        color: #000;
+        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid #eeeeee;
+        bottom: 36px;
+        left: -50px;
+        min-width: 416px;
+        font-family: '微软雅黑 Regular';
+        font-size: 14px;
+    }
+    .map-container .ol-popup:after, .map-container .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+    }
+    .map-container .ol-popup:after {
+        border-top-color: #fff;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+    }
+    .map-container .ol-popup:before {
+        border-top-color: #eeeeee;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+    }
+    .map-container .ol-popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+        color: black;
+    }
+    .map-container .ol-popup-closer:after {
+        content: "✖";
+    }
+</style>
